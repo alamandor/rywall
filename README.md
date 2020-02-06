@@ -10,6 +10,7 @@ My goal would be to write a rust program that can manage and implement differet 
 - Add the ability to genereate a color pallete from a supplied image file.
   - I'm thinking this will involved reading in the bytes of the image individually to construct a color pallete
   - I know there are algorithms used by tools like GIMP and photoshop that possibly could be useful that I could implement for my needs
+  This might be a good oppurtunity to learn more about working with threads, and concurrent programming.
   
 - Add feature that can connect and retrieve/update a git repo with your colorschemes. The idea being that the app and retrive your favorite schemes quickly on a new distro install or computer.
   - Maybe find a way to interact with github API
