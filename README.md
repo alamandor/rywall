@@ -15,3 +15,15 @@ My goal would be to write a rust program that can manage and implement differet 
 - Add feature that can connect and retrieve/update a git repo with your colorschemes. The idea being that the app and retrive your favorite schemes quickly on a new distro install or computer.
   - Maybe find a way to interact with github API
   - Else just evoke shell with git commands from within rust to pull remote repos
+
+# Useful Info
+- [Method in which i3 reads colors (anything loaded into the X resource database)](https://i3wm.org/docs/userguide.html#xresources)
+### Similar projects for inspiration:
+  - [Pywal (python)](https://github.com/dylanaraps/pywal)
+- Rust image manipulation library [palette](https://github.com/Ogeon/palette)
+### Web Framworks
+I may want to interact with the github web API directly in that case:
+- [Rocket](https://crates.io/crates/rocket)
+- [Iron](https://crates.io/crates/iron)
+- [Warp](https://crates.io/crates/warp)
+- [Gotham](https://github.com/gotham-rs/gotham)
