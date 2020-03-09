@@ -274,6 +274,7 @@ impl MMCQ {
         let pixel_len = pixels.len();
         let mut vec_32_bit = Vec::<u32>::new();
 
+        // Safe method to get a slice of [u32] out of [u8]
         for x in (0..pixel_len / 4).step_by(4) {
             // println!("x = {}", x);
             let slice_32 = &pixels[x..(x + 4)];
@@ -282,9 +283,8 @@ impl MMCQ {
             vec_32_bit.push(byte_slice);
         }
         // Grab groups of 4 8bit numbers and interpet them as single u32 numbers , slice will be a quarter of the length as a result.
-        // let pixels = unsafe { std::slice::from_raw_parts::<u32>(std::mem::transmute(&pixels[0]), pixels.len() / 4) };
 
-        // println!("{:?}", &pixels[0]);
+        // let pixels = unsafe { std::slice::from_raw_parts::<u32>(std::mem::transmute(&pixels[0]), pixels.len() / 4) };
 
         MMCQ::from_pixels_u32_rgba(vec_32_bit.as_slice(), k_max)
     }

@@ -1,3 +1,4 @@
+use colorsys::{Hsl};
 use image::DynamicImage::ImageRgba8;
 use image::ImageFormat;
 use std::fs::*;
@@ -75,9 +76,8 @@ fn process_image(file: &str) {
         Path::new(file).file_name().unwrap().to_str().unwrap()
     );
 
-    // let path_string = format!("./target/{}", Path::new(file).file_name().unwrap()).as_str();
-
-    println!("{}", path_string);
+    println!("Saving Output file to: {}", path_string);
 
     let _ = image::DynamicImage::ImageRgba8(imgbuf).save(Path::new(&path_string));
+
 }
