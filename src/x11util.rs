@@ -1,10 +1,8 @@
 use std::{
     ops::{Deref, DerefMut},
-    ptr
+    ptr,
 };
-use x11::{
-    xlib::{Display, XCloseDisplay, XOpenDisplay},
-};
+use x11::xlib::{Display, XCloseDisplay, XOpenDisplay};
 
 #[derive(Copy, Clone, Debug)]
 pub struct XDisplayError;

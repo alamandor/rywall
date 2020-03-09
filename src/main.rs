@@ -1,5 +1,4 @@
 mod x11util;
-use std::iter::FromIterator;
 use crate::x11util::XDisplay;
 use libc;
 use scopeguard::defer;
@@ -46,17 +45,19 @@ impl ColorScheme {
         let fg_str = format!("{}.foreground", prefix);
         let bg_str = format!("{}.background", prefix);
         let cursor_str = format!("{}.cursorColor", prefix);
-        let fg = get_xrm_resource(db, &fg_str).map(|s| String::from(s));
-        let bg = get_xrm_resource(db, &bg_str).map(|s| String::from(s));
-        let cursor = get_xrm_resource(db, &cursor_str).map(|s| String::from(s));
+
+        let fg = get_xsource_from_string(db, &fg_str).map(|s| String::from(s));
+        let bg = get_xsource_from_string(db, &bg_str).map(|s| String::from(s));
+        let cursor = get_xsource_from_string(db, &cursor_str).map(|s| String::from(s));
         let color_names = (0..16).map(|i| format!("{}.color{}", prefix, i));
+
         let colors = color_names
-            .map(|s| get_xrm_resource(db, &s).map(|s| String::from(s)))
+            .map(|s| get_xsource_from_string(db, &s).map(|s| String::from(s)))
             .collect::<Vec<_>>();
+
         xcolors.fg = fg;
         xcolors.bg = bg;
         xcolors.cursor = cursor;
-
 
         for x in 0..16 {
             xcolors.colors[x] = colors[x].clone();
@@ -65,7 +66,7 @@ impl ColorScheme {
     }
 }
 
-unsafe fn get_xrm_resource<'a>(db: XrmDatabase, name: &'a str) -> Option<&'a str> {
+unsafe fn get_xsource_from_string<'a>(db: XrmDatabase, name: &'a str) -> Option<&'a str> {
     let mut value = XrmValue {
         size: 0,
         addr: std::ptr::null_mut(),
@@ -90,15 +91,4 @@ unsafe fn get_xrm_resource<'a>(db: XrmDatabase, name: &'a str) -> Option<&'a str
     }
 }
 
-fn main() {
-
-    let xstruct = ColorScheme::new("st");
-    let xstruct2 = ColorScheme::new("Xterm");
-
-    println!("{:?}", xstruct);
-    println!("{:?}", xstruct2);
-
-
-
-
-}
+fn main() {}
