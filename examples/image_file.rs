@@ -5,7 +5,6 @@ use std::fs::*;
 use std::io::BufReader;
 use std::path::*;
 mod mcq_image;
-use mcq_image::*;
 
 const COLOR_HEIGHT: u32 = 64;
 const QUANT_SIZE: u32 = 8;

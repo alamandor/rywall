@@ -43,6 +43,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0dbbb57365263e881e805dc77d94697c9118fd94d8da011240555aa7b23445bd"
 
 [[package]]
+name = "colorsys"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3d957eac53570fcf87197c233f103464dd5ec8e3f5e32a1adeb03cd20fd3d2c"
+
+[[package]]
 name = "crc32fast"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -318,6 +324,7 @@ dependencies = [
 name = "rusty_theme"
 version = "0.1.0"
 dependencies = [
+ "colorsys",
  "image",
  "libc",
  "scopeguard",
