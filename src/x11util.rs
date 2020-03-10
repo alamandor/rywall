@@ -1,16 +1,15 @@
+use libc;
+use scopeguard::defer;
+use std::ffi::{CStr, CString};
 use std::{
     ops::{Deref, DerefMut},
     ptr,
 };
 use x11::xlib::{Display, XCloseDisplay, XOpenDisplay};
-use libc;
-use scopeguard::defer;
-use std::ffi::{CStr, CString};
 use x11::xlib::{
     XResourceManagerString, XrmDatabase, XrmDestroyDatabase, XrmGetResource, XrmGetStringDatabase,
     XrmValue,
 };
-
 
 #[derive(Copy, Clone, Debug)]
 pub struct XDisplayError;
@@ -47,20 +46,15 @@ impl Drop for XDisplay {
         }
     }
 }
-/// A struct for representing the colours found in the X Resource Manager's database.
 #[derive(Clone, Debug, Default)]
-pub struct ColorScheme {
-    /// Foreground colour: matches the "foreground" key.
+pub struct SystemColors {
     pub fg: Option<String>,
-    /// Background colour: matches the "background" key.
     pub bg: Option<String>,
-    /// Cursor colour: matches the "cursorColor" key.
     pub cursor: Option<String>,
-    /// Colours 0 to 15: match the "color{}" keys, where {} is a number from 0 to 15 inclusive.
     pub colors: [Option<String>; 16],
 }
 
-impl ColorScheme {
+impl SystemColors {
     // Searches for a prefix in the Xresource database, use of xlib functions based on documentation for the C versions.
     pub fn new<'a>(prefix: &'a str) -> Option<Self> {
         let display = XDisplay::new().expect("Failed to acquire X display!");
@@ -72,7 +66,7 @@ impl ColorScheme {
                     defer!({
                         XrmDestroyDatabase(db);
                     });
-                    return Some(ColorScheme::from_database(db, prefix));
+                    return Some(SystemColors::from_database(db, prefix));
                 }
             }
         }
@@ -80,18 +74,18 @@ impl ColorScheme {
     }
 
     unsafe fn from_database<'a>(db: XrmDatabase, prefix: &'a str) -> Self {
-        let mut xcolors = ColorScheme::default();
+        let mut xcolors = SystemColors::default();
         let fg_str = format!("{}.foreground", prefix);
         let bg_str = format!("{}.background", prefix);
         let cursor_str = format!("{}.cursorColor", prefix);
 
-        let fg = get_xsource_from_string(db, &fg_str).map(|s| String::from(s));
-        let bg = get_xsource_from_string(db, &bg_str).map(|s| String::from(s));
-        let cursor = get_xsource_from_string(db, &cursor_str).map(|s| String::from(s));
+        let fg = Self::get_xsource_from_string(db, &fg_str).map(|s| String::from(s));
+        let bg = Self::get_xsource_from_string(db, &bg_str).map(|s| String::from(s));
+        let cursor = Self::get_xsource_from_string(db, &cursor_str).map(|s| String::from(s));
         let color_names = (0..16).map(|i| format!("{}.color{}", prefix, i));
 
         let colors = color_names
-            .map(|s| get_xsource_from_string(db, &s).map(|s| String::from(s)))
+            .map(|s| Self::get_xsource_from_string(db, &s).map(|s| String::from(s)))
             .collect::<Vec<_>>();
 
         xcolors.fg = fg;
@@ -103,29 +97,29 @@ impl ColorScheme {
         }
         xcolors
     }
-}
 
-unsafe fn get_xsource_from_string<'a>(db: XrmDatabase, name: &'a str) -> Option<&'a str> {
-    let mut value = XrmValue {
-        size: 0,
-        addr: std::ptr::null_mut(),
-    };
+    unsafe fn get_xsource_from_string<'a>(db: XrmDatabase, name: &'a str) -> Option<&'a str> {
+        let mut value = XrmValue {
+            size: 0,
+            addr: std::ptr::null_mut(),
+        };
 
-    let mut value_type: *mut libc::c_char = std::ptr::null_mut();
-    let name_c_str = CString::new(name).unwrap();
-    let c_str = CString::new("String").unwrap();
-    if XrmGetResource(
-        db,
-        name_c_str.as_ptr(),
-        c_str.as_ptr(),
-        &mut value_type,
-        &mut value,
-    ) != 0
-        && !value.addr.is_null()
-    {
-        let value_addr: &CStr = CStr::from_ptr(value.addr);
-        value_addr.to_str().ok()
-    } else {
-        None
+        let mut value_type: *mut libc::c_char = std::ptr::null_mut();
+        let name_c_str = CString::new(name).unwrap();
+        let c_str = CString::new("String").unwrap();
+        if XrmGetResource(
+            db,
+            name_c_str.as_ptr(),
+            c_str.as_ptr(),
+            &mut value_type,
+            &mut value,
+        ) != 0
+            && !value.addr.is_null()
+        {
+            let value_addr: &CStr = CStr::from_ptr(value.addr);
+            value_addr.to_str().ok()
+        } else {
+            None
+        }
     }
 }

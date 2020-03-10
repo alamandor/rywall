@@ -119,13 +119,13 @@ impl ColorBucket {
 
     fn split_box(&mut self, colors: &mut Vec<ColorNode>) -> Option<ColorBucket> {
         if self.color_count() < 2 {
-            None // this box cannot be split
+            None
         } else {
-            // find longest dimension of this box:
-            let dim = self.get_longest_color_dimension();
+            // find longest dimension
+            let longest_dimension = self.get_longest_color_longest_dimensionension();
 
-            // find median along dim
-            let med = self.find_median(dim, colors);
+            // find median along longest_dimension
+            let med = self.find_median(longest_dimension, colors);
 
             // now split this box at the median return the resulting new box.
             let next_level = self.level + 1;
@@ -137,7 +137,7 @@ impl ColorBucket {
         }
     }
 
-    fn get_longest_color_dimension(&self) -> ColorDimension {
+    fn get_longest_color_longest_dimensionension(&self) -> ColorDimension {
         let r_length = self.rmax - self.rmin;
         let g_length = self.gmax - self.gmin;
         let b_length = self.bmax - self.bmin;
@@ -151,9 +151,9 @@ impl ColorBucket {
         }
     }
 
-    fn find_median(&self, dim: ColorDimension, colors: &mut Vec<ColorNode>) -> usize {
-        // sort color in this box along dimension dim:
-        match dim {
+    fn find_median(&self, longest_dimension: ColorDimension, colors: &mut Vec<ColorNode>) -> usize {
+        // sort color in this box along longest_dimension
+        match longest_dimension {
             ColorDimension::Red => {
                 colors[self.lower..(self.upper + 1)].sort_by(|a, b| a.red.cmp(&b.red))
             }
@@ -217,7 +217,7 @@ impl ColorHistogram {
         let mut pixels_copy = Vec::with_capacity(n);
         for i in 0..n {
             // remove possible alpha components
-            pixels_copy.push((0xFFFFFF & pixels_orig[i]));
+            pixels_copy.push(0xFFFFFF & pixels_orig[i]);
         }
         pixels_copy.sort();
 
@@ -261,7 +261,7 @@ pub struct MMCQ {
 }
 
 impl MMCQ {
-    pub fn from_pixels_u8_rgba(pixels: &[u8], k_max: u32) -> MMCQ {
+    pub fn from_pixel_vec(pixels: &[u8], k_max: u32) -> MMCQ {
         let pixel_len = pixels.len();
         let mut vec_32_bit = Vec::<u32>::new();
 
@@ -275,10 +275,10 @@ impl MMCQ {
         }
         // Grab groups of 4 8bit numbers and interpet them as single u32 numbers , slice will be a quarter of the length as a result.
 
-        MMCQ::from_pixels_u32_rgba(vec_32_bit.as_slice(), k_max)
+        MMCQ::from_u32_vec(vec_32_bit.as_slice(), k_max)
     }
 
-    pub fn from_pixels_u32_rgba(pixels: &[u32], k_max: u32) -> MMCQ {
+    pub fn from_u32_vec(pixels: &[u32], k_max: u32) -> MMCQ {
         let mut m = MMCQ {
             image_colors: Vec::new(),
             quant_colors: Vec::new(),
@@ -294,21 +294,12 @@ impl MMCQ {
         &self.quant_colors
     }
 
-    pub fn quantize_image(&mut self, orig_pixels: &Vec<u32>) -> Vec<u32> {
-        let mut quant_pixels = orig_pixels.clone();
-        for i in 0..orig_pixels.len() {
-            let color = self.find_closest_color(orig_pixels[i]);
-            quant_pixels[i] = color.rgb;
-        }
-        quant_pixels
-    }
-
     fn find_representative_colors(&mut self, pixels: &[u32], k_max: u32) -> Vec<ColorNode> {
         let color_hist = ColorHistogram::new_pixels(pixels);
-        let cnum = color_hist.color_array.len();
+        let hist_color_total = color_hist.color_array.len();
 
-        self.image_colors = Vec::with_capacity(cnum);
-        for i in 0..cnum {
+        self.image_colors = Vec::with_capacity(hist_color_total);
+        for i in 0..hist_color_total {
             let rgb = color_hist.color_array[i];
             let cnt = color_hist.count_array[i];
             self.image_colors.push(ColorNode::new_rgb(rgb, cnt));
@@ -316,54 +307,62 @@ impl MMCQ {
 
         // println!("{:?}", self.image_colors);
 
-        let r_cols = if cnum <= k_max as usize {
-            // image has fewer colors than k_max
-            self.image_colors.clone()
-        } else {
-            let initial_box = ColorBucket::new(0, cnum - 1, 0, &mut self.image_colors);
+        if hist_color_total <= k_max as usize {
+            let result = self.image_colors.clone();
+            result
+        }
+        else{
+            let initial_box = ColorBucket::new(0, hist_color_total - 1, 0, &mut self.image_colors);
             let mut color_set = Vec::new();
             color_set.push(initial_box);
             let mut k = 1;
             let mut done = false;
-            while k < k_max && !done {
-                let new_box = if let Some(mut next_box) = self.find_box_to_split(&mut color_set) {
-                    next_box.split_box(&mut self.image_colors)
-                } else {
-                    done = true;
-                    None
-                };
 
-                if let Some(new_box) = new_box {
-                    color_set.push(new_box);
-                    k = k + 1;
+            while k < k_max && !done {
+                let mut new_box: Option<ColorBucket>;
+                match self.get_next_split(&mut color_set) {
+                    Some(x) => {
+                        new_box = x.split_box(&mut self.image_colors);
+                        color_set.push(new_box.unwrap());
+                        k += 1;
+                    },
+                    None => {
+                        done = true;
+                    }
                 }
             }
 
-            self.average_colors(&color_set)
-        };
-        r_cols
-    }
-
-    fn find_closest_color(&self, rgb: u32) -> ColorNode {
-        let idx = self.find_closest_color_index(rgb);
-        self.quant_colors[idx]
-    }
-
-    fn find_closest_color_index(&self, rgb: u32) -> usize {
-        let red = ((rgb & 0xFF0000) >> 16) as u8;
-        let grn = ((rgb & 0xFF00) >> 8) as u8;
-        let blu = (rgb & 0xFF) as u8;
-        let mut min_idx = 0;
-        let mut min_distance = ::std::i32::MAX;
-        for i in 0..self.quant_colors.len() {
-            let color = self.quant_colors[i];
-            let d2 = color.distance2(red, grn, blu);
-            if d2 < min_distance {
-                min_distance = d2;
-                min_idx = i;
-            }
+            let result = self.average_colors(&color_set);
+            result
         }
-        min_idx
+
+
+//         let r_cols = if hist_color_total <= k_max as usize {
+//             // image has fewer colors than k_max
+//             self.image_colors.clone()
+//         } else {
+//             let initial_box = ColorBucket::new(0, hist_color_total - 1, 0, &mut self.image_colors);
+//             let mut color_set = Vec::new();
+//             color_set.push(initial_box);
+//             let mut k = 1;
+//             let mut done = false;
+//             while k < k_max && !done {
+//                 let new_box = if let Some(next_box) = self.get_next_split(&mut color_set) {
+//                     next_box.split_box(&mut self.image_colors)
+//                 } else {
+//                     done = true;
+//                     None
+//                 };
+
+//                 if let Some(new_box) = new_box {
+//                     color_set.push(new_box);
+//                     k = k + 1;
+//                 }
+//             }
+
+//             self.average_colors(&color_set)
+//         };
+//         r_cols
     }
 
     fn average_colors(&mut self, color_buckets: &Vec<ColorBucket>) -> Vec<ColorNode> {
@@ -377,14 +376,14 @@ impl MMCQ {
         return avg_colors;
     }
 
-    fn find_box_to_split<'a>(
+    fn get_next_split<'a>(
         &self,
         color_buckets: &'a mut Vec<ColorBucket>,
     ) -> Option<&'a mut ColorBucket> {
         let mut box_to_split = None;
         // from the set of splitable color boxes
         // select the one with the minimum level
-        let mut min_level = ::std::isize::MAX;
+        let mut min_level = std::isize::MAX;
         for b in color_buckets {
             if b.color_count() >= 2 {
                 // box can be split
