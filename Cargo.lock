@@ -354,6 +354,7 @@ dependencies = [
  "libc",
  "scopeguard",
  "x11",
+ "xrdb",
 ]
 
 [[package]]
@@ -414,4 +415,15 @@ checksum = "77ecd092546cb16f25783a5451538e73afc8d32e242648d54f4ae5459ba1e773"
 dependencies = [
  "libc",
  "pkg-config",
+]
+
+[[package]]
+name = "xrdb"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc2dd91a21c92e87678e22f95956a03bfd314ce3232f39dbedd49dddb50f0c6d"
+dependencies = [
+ "libc",
+ "scopeguard",
+ "x11",
 ]

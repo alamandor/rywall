@@ -1,4 +1,4 @@
-mod x11util;
+use xrdb::*;
 use clap::{App, Arg};
 use image::ImageFormat;
 use std::fs::*;
@@ -32,25 +32,25 @@ fn main() {
                 .help("Reload Xresource files to update system colorscheme"),
         )
         .arg(
-            Arg::with_name("list-all")
+            Arg::with_name("list")
                 .short("l")
-                .long("list-all")
-                .help("Print a list of all available themes"),
+                .long("list")
+                .help("Print currently loaded theme in Xresources Database."),
         );
 
     let matches = cli.get_matches();
 
     if matches.is_present("image") {
         let image_file_name = matches.value_of("image").unwrap();
-        process_image(image_file_name);
+        colors_from_image(image_file_name);
     }
 }
 
-fn process_image(file: &str) {
+fn colors_from_image(file: &str) {
     let pallet_size = 16;
     println!("Reading image {}", file);
 
-    let mcq = {
+    let q_col = {
         let img = image::load(BufReader::new(File::open(file).unwrap()), ImageFormat::Jpeg)
             .unwrap()
             .to_rgba();
@@ -59,7 +59,7 @@ fn process_image(file: &str) {
         mcq_image::MedianCut::from_pixel_vec(data.as_slice(), pallet_size)
     };
 
-    let common_colors = mcq.get_quantized_colors();
+    let common_colors = q_col.get_quantized_colors();
 
     for x1 in 0..pallet_size {
         println!("Color {}:", (x1 + 1));

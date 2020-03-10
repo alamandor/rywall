@@ -20,3 +20,4 @@ features = ["xlib"]
 image = "0.23.0"
 colorsys = "0.5.3"
 clap = "1.4.1"
+xrdb = "0.1.1"
