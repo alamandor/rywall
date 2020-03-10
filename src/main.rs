@@ -56,16 +56,19 @@ fn process_image(file: &str) {
             .to_rgba();
         let data = img.into_vec();
 
-        mcq_image::MMCQ::from_pixel_vec(data.as_slice(), pallet_size)
+        mcq_image::MedianCut::from_pixel_vec(data.as_slice(), pallet_size)
     };
 
     let common_colors = mcq.get_quantized_colors();
 
     for x1 in 0..pallet_size {
-        println!("Color {}:", (x1+1));
+        println!("Color {}:", (x1 + 1));
         let q = common_colors[x1 as usize];
         println!("Decimal: red = {}, grn = {}, blu = {}", q.red, q.grn, q.blu);
         println!("{}", q.rgb);
-        println!("Hexadecimal: red = {:X}, grn = {:X}, blu = {:X}", q.red, q.grn, q.blu);
+        println!(
+            "Hexadecimal: red = {:X}, grn = {:X}, blu = {:X}",
+            q.red, q.grn, q.blu
+        );
     }
 }
