@@ -165,7 +165,6 @@ impl ColorBucket {
     }
 }
 
-
 #[derive(Debug, Clone, Copy)]
 enum Color {
     Red,
@@ -173,7 +172,7 @@ enum Color {
     Blue,
 }
 
-#[derive(Debug, Clone,PartialEq, Copy, Default)]
+#[derive(Debug, Clone, PartialEq, Copy, Default)]
 pub struct ColorChannel {
     pub rgb: u32,
     pub red: u8,

@@ -1,6 +1,6 @@
 use clap::{App, Arg};
-use float_cmp::*;
 use dirs::home_dir;
+use float_cmp::*;
 use image::ImageFormat;
 use std::collections::HashMap;
 use std::fs::*;
@@ -70,7 +70,6 @@ fn main() -> Result<(), Error> {
     let matches = cli.get_matches();
     let save_file: &str;
 
-
     if matches.is_present("colorscheme") {
         let file = matches.value_of("colorscheme").unwrap();
         let _p_output = Command::new("xrdb")
@@ -78,7 +77,6 @@ fn main() -> Result<(), Error> {
             .output()
             .expect("failed to execute xrdb");
         return Ok(());
-
     }
 
     // Load Pallet and apply colorscheme from a JPEG file
@@ -101,8 +99,6 @@ fn main() -> Result<(), Error> {
         }
     }
 
-
-
     // Reload Default Xresource file
     if matches.is_present("reload") {
         let home = home_dir();
@@ -115,11 +111,10 @@ fn main() -> Result<(), Error> {
                         .arg(home)
                         .output()
                         .expect("failed to execute xrdb");
-                }
-                else {
+                } else {
                     println!("Can't use reload (-r) default .Xresources file with the -n option");
                 }
-            },
+            }
             None => {
                 println!("Cannot find Home Directory, make sure ENV variable is set");
             }
@@ -141,11 +136,9 @@ fn main() -> Result<(), Error> {
         }
     }
 
-
     // Done
     Ok(())
 }
-
 
 fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
     let pallet_size = 16;
