@@ -217,7 +217,6 @@ impl Histogram {
         let n = pixels.len();
         let mut pixels_copy = Vec::with_capacity(n);
 
-
         for p in pixels.iter().take(n) {
             pixels_copy.push(0x00FF_FFFF & p);
         }
