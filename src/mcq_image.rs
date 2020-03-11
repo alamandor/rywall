@@ -1,13 +1,13 @@
 use std::convert::TryInto;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy)]
 enum Color {
     Red,
     Green,
     Blue,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct ColorChannel {
     pub rgb: u32,
     pub red: u8,
@@ -67,12 +67,7 @@ impl ColorBucket {
         bucket
     }
 
-    fn color_count(&self) -> usize {
-        self.upper - self.lower
-    }
-
-    // Updates bounds of colors in bucket
-    fn update_bounds(&mut self, colors: &[ColorChannel]) {
+    fn reset_dimensions(&mut self) {
         self.rmin = 255;
         self.rmax = 0;
         self.gmin = 255;
@@ -80,44 +75,64 @@ impl ColorBucket {
         self.bmin = 255;
         self.bmax = 0;
         self.count = 0;
-        for c in colors.iter().take(self.upper).skip(self.lower) {
-            // let color = colors[i];
-            self.count += c.cnt;
-            let r = c.red as i32;
-            let g = c.grn as i32;
-            let b = c.blu as i32;
-            if r > self.rmax {
-                self.rmax = r;
+    }
+
+    fn color_count(&self) -> usize {
+        self.upper - self.lower
+    }
+
+    fn larger(&mut self, in_color: i32, c_type: Color) {
+        match c_type {
+            Color::Red => {
+                if in_color > self.rmax {
+                    self.rmax = in_color;
+                }
+                if in_color < self.rmin {
+                    self.rmin = in_color;
+                }
             }
-            if r < self.rmin {
-                self.rmin = r;
+            Color::Green => {
+                if in_color > self.gmax {
+                    self.gmax = in_color;
+                }
+                if in_color < self.gmin {
+                    self.gmin = in_color;
+                }
             }
-            if g > self.gmax {
-                self.gmax = g;
-            }
-            if g < self.gmin {
-                self.gmin = g;
-            }
-            if b > self.bmax {
-                self.bmax = b;
-            }
-            if b < self.bmin {
-                self.bmin = b;
+            Color::Blue => {
+                if in_color > self.bmax {
+                    self.bmax = in_color;
+                }
+                if in_color < self.bmin {
+                    self.bmin = in_color;
+                }
             }
         }
     }
 
+    // Updates bounds of colors in bucket
+    fn update_bounds(&mut self, colors: &[ColorChannel]) {
+        self.reset_dimensions();
+
+        for c in colors.iter().take(self.upper).skip(self.lower) {
+            // let color = colors[i];
+            self.count += c.cnt;
+
+            self.larger(c.red as i32, Color::Red);
+            self.larger(c.grn as i32, Color::Green);
+            self.larger(c.blu as i32, Color::Blue);
+        }
+    }
+
+    // Grabs Median of the longest color dimension and use it to find where the next split should be.
     fn split_box(&mut self, colors: &mut Vec<ColorChannel>) -> Option<ColorBucket> {
         if self.color_count() < 2 {
             None
         } else {
-            // find longest dimension
             let longest_dimension = self.get_longest_color();
 
-            // find median along longest_dimension
             let med = self.find_median(longest_dimension, colors);
 
-            // now split this box at the median return the resulting new box.
             let next_level = self.level + 1;
             let new_box = ColorBucket::new(med + 1, self.upper, next_level, colors);
             self.upper = med;
@@ -144,15 +159,9 @@ impl ColorBucket {
     fn find_median(&self, longest_dimension: Color, colors: &mut Vec<ColorChannel>) -> usize {
         // sort color in this box along longest_dimension
         match longest_dimension {
-            Color::Red => {
-                colors[self.lower..=self.upper].sort_by(|a, b| a.red.cmp(&b.red))
-            }
-            Color::Green => {
-                colors[self.lower..=self.upper].sort_by(|a, b| a.grn.cmp(&b.grn))
-            }
-            Color::Blue => {
-                colors[self.lower..=self.upper].sort_by(|a, b| a.blu.cmp(&b.blu))
-            }
+            Color::Red => colors[self.lower..=self.upper].sort_by(|a, b| a.red.cmp(&b.red)),
+            Color::Green => colors[self.lower..=self.upper].sort_by(|a, b| a.grn.cmp(&b.grn)),
+            Color::Blue => colors[self.lower..=self.upper].sort_by(|a, b| a.blu.cmp(&b.blu)),
         }
 
         let half = self.count / 2;
@@ -187,28 +196,29 @@ impl ColorBucket {
 }
 
 struct Histogram {
-    color_array: Vec<u32>,
-    count_array: Vec<usize>,
+    color_vec: Vec<u32>,
+    count_vec: Vec<usize>,
 }
 
 impl Histogram {
     pub fn new(colors: Vec<u32>, counts: Vec<usize>) -> Histogram {
         Histogram {
-            color_array: colors,
-            count_array: counts,
+            color_vec: colors,
+            count_vec: counts,
         }
     }
 
     pub fn new_pixels(pixels: &[u32]) -> Histogram {
-        let mut color_array = Vec::new();
-        let mut count_array = Vec::new();
+        let mut color_vec = Vec::new();
+        let mut count_vec = Vec::new();
         let mut c_index = 0;
         let mut first_loop = false;
         let mut cur_color = 0;
         let n = pixels.len();
         let mut pixels_copy = Vec::with_capacity(n);
+
         for p in pixels.iter().take(n) {
-            pixels_copy.push(0xFFFFFF & p);
+            pixels_copy.push(0x00FF_FFFF & p);
         }
         pixels_copy.sort();
 
@@ -225,15 +235,15 @@ impl Histogram {
         for p in &pixels_copy {
             if *p != cur_color || !first_loop {
                 cur_color = *p;
-                color_array.push(cur_color);
-                count_array.push(1);
+                color_vec.push(cur_color);
+                count_vec.push(1);
                 first_loop = true;
                 c_index += 1;
             } else {
-                count_array[c_index - 1] += 1;
+                count_vec[c_index - 1] += 1;
             }
         }
-        Histogram::new(color_array, count_array)
+        Histogram::new(color_vec, count_vec)
     }
 }
 
@@ -254,14 +264,12 @@ impl MedianCut {
 
         // Safe'er' method to get a slice of [u32] out of [u8]
         for x in (0..pixel_len / 4).step_by(4) {
-            // println!("x = {}", x);
             let slice_32 = &pixels[x..(x + 4)];
             let byte_slice =
                 u32::from_le_bytes(slice_32.try_into().expect("failure converting u8 to u32"));
             vec_32_bit.push(byte_slice);
         }
         // Grab groups of 4 8bit numbers and interpet them as single u32 numbers , slice will be a quarter of the length as a result.
-
 
         dominant_colors.quantized = dominant_colors.median_cut(&vec_32_bit, pallet_size);
         dominant_colors.quantized.sort_by(|a, b| b.cnt.cmp(&a.cnt));
@@ -275,14 +283,14 @@ impl MedianCut {
 
     fn median_cut(&mut self, pixels: &[u32], pallet_size: u32) -> Vec<ColorChannel> {
         let color_hist = Histogram::new_pixels(pixels);
-            let mut count = 1;
-            let mut done = false;
-        let hist_color_total = color_hist.color_array.len();
+        let mut count = 1;
+        let mut done = false;
+        let hist_color_total = color_hist.color_vec.len();
 
         self.image = Vec::with_capacity(hist_color_total);
         for i in 0..hist_color_total {
-            let rgb = color_hist.color_array[i];
-            let cnt = color_hist.count_array[i];
+            let rgb = color_hist.color_vec[i];
+            let cnt = color_hist.count_vec[i];
             self.image.push(ColorChannel::new_rgb(rgb, cnt));
         }
 
@@ -334,7 +342,6 @@ impl MedianCut {
                 min = bucket.level;
                 next_split = Some(bucket);
             }
-
         }
         next_split
     }

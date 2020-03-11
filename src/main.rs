@@ -1,8 +1,8 @@
-use xrdb::*;
 use clap::{App, Arg};
 use image::ImageFormat;
 use std::fs::*;
-use std::io::BufReader;
+use std::io::{BufReader, BufRead, Write, Error};
+use xrdb::*;
 mod mcq_image;
 
 fn main() {
@@ -46,7 +46,7 @@ fn main() {
     }
 }
 
-fn colors_from_image(file: &str) {
+fn colors_from_image(file: &str) -> Result<(), Error>  {
     let pallet_size = 16;
     println!("Reading image {}", file);
 
@@ -60,15 +60,38 @@ fn colors_from_image(file: &str) {
     };
 
     let common_colors = q_col.get_quantized_colors();
+    let path = "./colorscheme";
 
-    for x1 in 0..pallet_size {
-        println!("Color {}:", (x1 + 1));
-        let q = common_colors[x1 as usize];
-        println!("Decimal: red = {}, grn = {}, blu = {}", q.red, q.grn, q.blu);
-        println!("{}", q.rgb);
-        println!(
-            "Hexadecimal: red = {:X}, grn = {:X}, blu = {:X}",
-            q.red, q.grn, q.blu
-        );
+    let mut output = File::create(path)?;
+
+
+
+    for x in 0..pallet_size {
+        let mut q = common_colors[x as usize];
+
+        // If number are too low add just enough to get them over 16.
+        // Messy fix for not getting format! to pad numbers below 16 with a zero in Hexadecimal.
+        if q.red <= 16 {
+            q.red = (16 - q.red) + 1;
+        }
+        if q.grn <= 16 {
+            q.grn += (16 - q.grn) + 1;
+        }
+        if q.blu  <= 16 {
+            q.blu += (16 - q.blu) + 1;
+        }
+
+        let x_color_str = format!("Color{}: #{:x}{:x}{:x}", x, q.red, q.grn, q.blu,);
+
+        writeln!(output, "{}", x_color_str)?;
     }
+
+    let input = File::open(path)?;
+    let buffered = BufReader::new(input);
+    for line in buffered.lines() {
+        println!("{}", line?);
+    }
+
+    Ok(())
+
 }
