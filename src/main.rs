@@ -10,16 +10,27 @@ mod mcq_image;
 fn main() -> Result<(), Error> {
     let cli = App::new("rusty-theme")
         .version("1.0")
-        .usage("rusty-theme [-i <image file path>]")
+        .help("myapp v1.0\n\
+           Generate colorschemes from .jpg/.jpeg\n\
+           (C) aag3@pdx.edu\n\n\
+
+           USAGE: rusty-theme -i <image_file> -s <output_name> [Options]\n\n\
+
+           Options:\n\
+           -h, --help           Display this message\n\
+           -i, --image <file>   Use supplied file for colorscheme\n\
+           -s  --save <name>    Use supplied name for colorscheme file generated\n\
+           -r                   Reload the default .Xresources file cannot use with -c\n\
+           -c                   Reload Xresources with generated colorscheme")
+        .usage("rusty-theme [-i <image file path>]\n\t-- [-c Immediately load generated colorscheme]\n\t-- [-r Load the user's default .Xresources file in their home directory] (Cannot be used with the -c Option)]\n\t-- [-s <Desired colorscheme name>]")
         .about("Use existing images to calculate a pallet for Xresources")
-        .arg(Arg::with_name("theme").help("The theme to use").index(1))
         .arg(
             Arg::with_name("image")
-                .short("i")
-                .long("image")
-                .value_name("file")
-                .help("Direct to image file you want to use to make a pallet")
-                .takes_value(true),
+            .short("i")
+            .long("image")
+            .value_name("file")
+            .help("Direct to image file you want to use to make a pallet")
+            .takes_value(true),
         )
         .arg(
             Arg::with_name("save")
@@ -27,6 +38,12 @@ fn main() -> Result<(), Error> {
                 .long("save")
                 .help("save created pallet in a theme file")
                 .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("colorscheme")
+                .short("c")
+                .long("colorscheme")
+                .help("load the created colorscheme in xrdb"),
         )
         .arg(
             Arg::with_name("reload")
@@ -39,28 +56,44 @@ fn main() -> Result<(), Error> {
                 .short("l")
                 .long("list")
                 .help("Print currently loaded theme in Xresources Database."),
-        );
+                );
 
     let matches = cli.get_matches();
+    let save_file: &str;
 
     // Load Pallet and apply colorscheme from a JPEG file
     if matches.is_present("image") {
         let image_file_name = matches.value_of("image").unwrap();
         if matches.is_present("save") {
-            let save_file = matches.value_of("save").unwrap();
+            save_file = matches.value_of("save").unwrap();
+            println!("{:?}", save_file);
             colors_from_image(image_file_name, save_file)?;
         } else {
             colors_from_image(image_file_name, "")?;
+            save_file = "/colorscheme";
+        }
+        // Reload colorscheme  file
+        if matches.is_present("colorscheme") {
+            let p_output = Command::new("xrdb")
+                .arg(save_file)
+                .output()
+                .expect("failed to execute xrdb");
+            println!("{:?}", p_output);
         }
     }
 
-    // Reload Xresource file
+    // Reload Default Xresource file
     if matches.is_present("reload") {
+        if matches.occurrences_of("colorscheme") == 0 {
         let p_output = Command::new("xrdb")
             .arg("/home/aag/.Xresources")
             .output()
             .expect("failed to execute xrdb");
         println!("{:?}", p_output);
+        }
+        else {
+            println!("Can't use reload (-r) default .Xresources file with the -c option");
+        }
     }
 
     // Print the Current colorscheme in the XDatabase
@@ -78,9 +111,11 @@ fn main() -> Result<(), Error> {
         }
     }
 
+
     // Done
     Ok(())
 }
+
 
 fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
     let pallet_size = 16;
@@ -141,6 +176,8 @@ fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
         }
     }
 
+    // Find and get the appropriate matching max and min values and their key
+    // approx_eq! is from the float-cmp crate, makes it so it compiles with cargo clippy
     let fg = all_colors.iter().find_map(|(key, &val)| {
         if approx_eq!(f64, val, lum_max, ulps = 5) {
             Some(key)
@@ -165,6 +202,7 @@ fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
     let bg_file_string = format!("*background: {}", bg_str[1]);
     let fg_file_string = format!("*foreground: {}", fg_str[1]);
 
+    // Write string to bottom of colorscheme file
     writeln!(output, "{}", bg_file_string)?;
     writeln!(output, "{}", fg_file_string)?;
 

@@ -7,7 +7,7 @@ enum Color {
     Blue,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone,PartialEq, Copy, Default)]
 pub struct ColorChannel {
     pub rgb: u32,
     pub red: u8,
