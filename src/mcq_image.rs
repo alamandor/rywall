@@ -295,8 +295,7 @@ impl MedianCut {
         }
 
         if hist_color_total <= pallet_size as usize {
-            let result = self.image.clone();
-            result
+             self.image.clone()
         } else {
             let initial_box = ColorBucket::new(0, hist_color_total - 1, 0, &self.image);
             let mut color_set = Vec::new();
@@ -316,8 +315,7 @@ impl MedianCut {
                 }
             }
 
-            let result = self.avg_colors(&color_set);
-            result
+            self.avg_colors(&color_set)
         }
     }
 

@@ -1,12 +1,11 @@
 use clap::{App, Arg};
+use float_cmp::*;
 use image::ImageFormat;
-use std::process::{Command};
 use std::collections::HashMap;
 use std::fs::*;
-use std::io::{BufReader, BufRead, Write, Error};
-use xrdb::*;
+use std::io::{BufRead, BufReader, Error, Write};
+use std::process::Command;
 mod mcq_image;
-
 
 fn main() -> Result<(), Error> {
     let cli = App::new("rusty-theme")
@@ -50,17 +49,14 @@ fn main() -> Result<(), Error> {
         if matches.is_present("save") {
             let save_file = matches.value_of("save").unwrap();
             colors_from_image(image_file_name, save_file)?;
-        }
-        else{
+        } else {
             colors_from_image(image_file_name, "")?;
         }
     }
 
-
     // Reload Xresource file
     if matches.is_present("reload") {
-        let p_output =
-            Command::new("xrdb")
+        let p_output = Command::new("xrdb")
             .arg("/home/aag/.Xresources")
             .output()
             .expect("failed to execute xrdb");
@@ -71,20 +67,26 @@ fn main() -> Result<(), Error> {
     if matches.is_present("list") {
         let current_colors = xrdb::Colors::new("*");
 
-        println!("{:?}", current_colors);
+        let fg = current_colors.clone().unwrap().fg.unwrap();
+        let bg = current_colors.clone().unwrap().bg.unwrap();
+        println!("Current colorscheme loaded by Xresources database");
+        println!("fg = {:?}", fg);
+        println!("bg = {:?}", bg);
+
+        for color in current_colors.unwrap().colors.iter() {
+            println!("color = {}", color.clone().unwrap());
+        }
+
+
+
     }
-
-
-
-
-
 
 
     // Done
     Ok(())
 }
 
-fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error>  {
+fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
     let pallet_size = 16;
     println!("Reading image {}", file);
 
@@ -98,17 +100,14 @@ fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error>  {
     };
 
     let common_colors = q_col.get_quantized_colors();
-    let path: &str;
-    if !o_path.is_empty() {
-        path = o_path;
-    }
-    else {
-        path = "./colorscheme";
-    }
+    let path = if !o_path.is_empty() {
+        o_path
+    } else {
+        "./colorscheme"
+    };
     let mut output = File::create(path)?;
 
     let mut all_colors = HashMap::new();
-
 
     for x in 0..pallet_size {
         let mut q = common_colors[x as usize];
@@ -122,20 +121,17 @@ fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error>  {
         if q.grn <= 16 {
             q.grn += (16 - q.grn) + 1;
         }
-        if q.blu  <= 16 {
+        if q.blu <= 16 {
             q.blu += (16 - q.blu) + 1;
         }
-
 
         // Find the luminance (brightness) of color. brighter = higher
         let lum = calc_luminance(q.red, q.grn, q.blu);
         let x_color_str = format!("*color{}: #{:X}{:X}{:X}", x, q.red, q.grn, q.blu);
         // println!("{:?}", x_color_str);
-        writeln!(output,"{}",  x_color_str);
+        writeln!(output, "{}", x_color_str)?;
         all_colors.insert(x_color_str, lum);
-
     }
-
 
     let mut lum_max = std::f64::MIN;
     let mut lum_min = std::f64::MAX;
@@ -147,20 +143,27 @@ fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error>  {
         if *val > lum_max {
             lum_max = *val;
         }
-
     }
 
-    // Get brightest color for fg and darkest color for bg
-    let fg = all_colors.iter().find_map(|(key, &val)| if val == lum_max {Some(key)} else {None});
-    let bg = all_colors.iter().find_map(|(key, &val)| if val == lum_min {Some(key)} else {None});
-
-
+    let fg = all_colors.iter().find_map(|(key, &val)| {
+        if approx_eq!(f64, val, lum_max, ulps = 5) {
+            Some(key)
+        } else {
+            None
+        }
+    });
+    let bg = all_colors.iter().find_map(|(key, &val)| {
+        if approx_eq!(f64, val, lum_min, ulps = 5) {
+            Some(key)
+        } else {
+            None
+        }
+    });
 
     let bg_color = bg.unwrap().as_str();
     let fg_color = fg.unwrap().as_str();
-    let bg_str: Vec<&str> = bg_color.split(" ").collect();
-    let fg_str: Vec<&str> = fg_color.split(" ").collect();
-
+    let bg_str: Vec<&str> = bg_color.split(' ').collect();
+    let fg_str: Vec<&str> = fg_color.split(' ').collect();
 
     // Construct string for file that has the brightest and darkest values
     let bg_file_string = format!("*background: {}", bg_str[1]);
@@ -178,11 +181,9 @@ fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error>  {
     }
 
     Ok(())
-
 }
 
 // TODO implement an iterator method to ColorChannel that takes this as a closure?
 fn calc_luminance(r: u8, g: u8, b: u8) -> f64 {
-
     (r as f64 * 0.299 + g as f64 * 0.587 + b as f64 * 0.114) / 256.0
 }
