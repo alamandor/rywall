@@ -18,15 +18,21 @@ My goal would be to write a rust program that can manage and implement differet 
 
 # Useful Info
 - [Method in which i3 reads colors (anything loaded into the X resource database)](https://i3wm.org/docs/userguide.html#xresources)
-### Similar projects for inspiration:
+- [Xresources](https://wiki.archlinux.org/index.php/x_resources)
+### Sources:
   - [Pywal (python)](https://github.com/dylanaraps/pywal)
+  - [Java Example of Median Cut](http://jcs.mobile-utopia.com/jcs/16423_ColorCutQuantizer.html)
+  - [Calculating Luminance from rgb values](https://stackoverflow.com/questions/596216/formula-to-determine-brightness-of-rgb-color)
 
 
 # How it Works
 - When you run the app with the -i option followed by a jpeg image, the most common 16 colors are grabbed from the image. This color pallete is saved to a text file that follows the syntax for defining hexadecimal colors as outlined by the Xresource system. Mainly, it adds the \* wildcard identifier followed by a color[n] from n = (0-15).
 - To help make sure that the foreground and background colors are as reasonable as they can be, the color pallete has its luminance calculated and the darkest color is assigned to the background, and the brighest color to the foreground.
+- The algorithm for the Median Cut is well-documented on the internet, the best documentee ones tended to be in Java.
+- Median Cut works but repeately splitting boxes that contain the colors and the volume of the colors in the image provided. We split the boxes until we get 16, along the way sorting the colors in descending order so we can ensure the split happens at distinct values. The end result is averaged at the end and the pallette is returned in the form of seperate vector of colorChannels, the data strcuture to hold the "pixels".
 
 # Issues
-- A big issue was figuring ways to deal with converting the incoming vector of 8-bit integers representing the rgb values. To do the Median Mean Cut Quantization [https://en.wikipedia.org/wiki/Median_cut] I needed to used 32-bit values, so the conversion involved iterating through the 8-bit vector and building them as 32-bit integers, making sure to acknowledge that the resulting array is a quarter of the length.
+- Usefulness as a colorscheme for your terminal is varied based on the source image. An image with not many contrasting colors will generate a pallete where most of the colors are the same.
+- A big issue was figuring ways to deal with converting the incoming vector of 8-bit integers representing the rgb values. To do the Median Mean Cut Quantization [Median Cut](https://en.wikipedia.org/wiki/Median_cut) I needed to used 32-bit values, so the conversion involved iterating through the 8-bit vector and building them as 32-bit integers, making sure to acknowledge that the resulting array is a quarter of the length.
 - The other major obstactle was getting convertable with bit-wise operations, mainly the bit-wise AND (&). I had to do research on my own to figure out how to use them. However, I found useful ways to utilize them to break apart individual rgb values from a single rgb integer. Many of the resources I used to read up on the algorithm had implementations with bit-wise operations and I could not find a way to do it without using them. But after this project I definitely have a better understanding of them.
 - Formatting strings into a form accepted by the Xresources file took some time as well, but I found that the format! macro was a life-saver for sure.
