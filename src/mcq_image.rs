@@ -1,42 +1,6 @@
 use std::convert::TryInto;
 
-#[derive(Debug, Clone, Copy)]
-enum Color {
-    Red,
-    Green,
-    Blue,
-}
-
-#[derive(Debug, Clone,PartialEq, Copy, Default)]
-pub struct ColorChannel {
-    pub rgb: u32,
-    pub red: u8,
-    pub grn: u8,
-    pub blu: u8,
-    pub cnt: usize,
-}
-
-impl ColorChannel {
-    fn new_rgb(rgb: u32, cnt: usize) -> ColorChannel {
-        ColorChannel {
-            rgb: (rgb & 0x00FF_FFFF),
-            blu: ((rgb & 0x00FF_0000) >> 16) as u8,
-            grn: ((rgb & 0xFF00) >> 8) as u8,
-            red: (rgb & 0xFF) as u8,
-            cnt,
-        }
-    }
-
-    fn new_colors(red: u8, grn: u8, blu: u8, cnt: usize) -> ColorChannel {
-        ColorChannel {
-            rgb: ((red as u32 & 0xff) << 16) | ((grn as u32 & 0xff) << 8) | blu as u32 & 0xff,
-            red,
-            grn,
-            blu,
-            cnt,
-        }
-    }
-}
+// Data structs used based from Java implementation provided in README
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 struct ColorBucket {
@@ -67,6 +31,7 @@ impl ColorBucket {
         bucket
     }
 
+    // Reset values for use in the update_bounds() function
     fn reset_dimensions(&mut self) {
         self.rmin = 255;
         self.rmax = 0;
@@ -81,6 +46,7 @@ impl ColorBucket {
         self.upper - self.lower
     }
 
+    // Sets internal color value to whatever is the largest of that and the provided argument val. Also matches the colortype to decide what channel to compare.
     fn larger(&mut self, in_color: i32, c_type: Color) {
         match c_type {
             Color::Red => {
@@ -133,6 +99,7 @@ impl ColorBucket {
 
             let med = self.find_median(longest_dimension, colors);
 
+            // Level used to help make sure we split boxes that havent been split yet first
             let next_level = self.level + 1;
             let new_box = ColorBucket::new(med + 1, self.upper, next_level, colors);
             self.upper = med;
@@ -158,12 +125,14 @@ impl ColorBucket {
 
     fn find_median(&self, longest_dimension: Color, colors: &mut Vec<ColorChannel>) -> usize {
         // sort color in this box along longest_dimension
+        // By continuing to do this until the pallet is created, we try and seperate off distinctive colors by moving them to the top and splitting them off
         match longest_dimension {
-            Color::Red => colors[self.lower..=self.upper].sort_by(|a, b| a.red.cmp(&b.red)),
-            Color::Green => colors[self.lower..=self.upper].sort_by(|a, b| a.grn.cmp(&b.grn)),
-            Color::Blue => colors[self.lower..=self.upper].sort_by(|a, b| a.blu.cmp(&b.blu)),
+            Color::Red => colors[self.lower..=self.upper].sort_by(|x, y| x.red.cmp(&y.red)),
+            Color::Green => colors[self.lower..=self.upper].sort_by(|x, y| x.grn.cmp(&y.grn)),
+            Color::Blue => colors[self.lower..=self.upper].sort_by(|x, y| x.blu.cmp(&y.blu)),
         }
 
+        // iterate through and find the appropriate median to return by using the color count of each channel to increment the pixel number
         let half = self.count / 2;
         let mut pixel_num = 0;
         for median in self.lower..self.upper {
@@ -176,6 +145,7 @@ impl ColorBucket {
         self.lower
     }
 
+    // Returns a new ColorChannel containing the acerage values of all the colors in the provided channel
     fn avg_color(&self, colors: &mut Vec<ColorChannel>) -> ColorChannel {
         let mut r_sum = 0;
         let mut g_sum = 0;
@@ -195,6 +165,45 @@ impl ColorBucket {
     }
 }
 
+
+#[derive(Debug, Clone, Copy)]
+enum Color {
+    Red,
+    Green,
+    Blue,
+}
+
+#[derive(Debug, Clone,PartialEq, Copy, Default)]
+pub struct ColorChannel {
+    pub rgb: u32,
+    pub red: u8,
+    pub grn: u8,
+    pub blu: u8,
+    pub cnt: usize,
+}
+
+impl ColorChannel {
+    fn new_rgb(rgb: u32, cnt: usize) -> ColorChannel {
+        ColorChannel {
+            rgb: (rgb & 0x00FF_FFFF),
+            blu: ((rgb & 0x00FF_0000) >> 16) as u8,
+            grn: ((rgb & 0xFF00) >> 8) as u8,
+            red: (rgb & 0xFF) as u8,
+            cnt,
+        }
+    }
+
+    fn new_colors(red: u8, grn: u8, blu: u8, cnt: usize) -> ColorChannel {
+        ColorChannel {
+            rgb: ((red as u32 & 0xff) << 16) | ((grn as u32 & 0xff) << 8) | blu as u32 & 0xff,
+            red,
+            grn,
+            blu,
+            cnt,
+        }
+    }
+}
+
 struct Histogram {
     color_vec: Vec<u32>,
     count_vec: Vec<usize>,
@@ -208,6 +217,8 @@ impl Histogram {
         }
     }
 
+    // Build a histogram from a provided u32 array and build a histogram
+    // object from it. Bit-wise operation is used to remove any potential alpha values from the array before adding.
     pub fn new_pixels(pixels: &[u32]) -> Histogram {
         let mut color_vec = Vec::new();
         let mut count_vec = Vec::new();
@@ -252,6 +263,7 @@ pub struct MedianCut {
     quantized: Vec<ColorChannel>,
 }
 
+// Takes a vector of u8 rgb values and converts them to an array of u32's for the purpose of calulation and avoiding overflow
 impl MedianCut {
     pub fn from_pixel_vec(pixels: &[u8], pallet_size: u32) -> MedianCut {
         let pixel_len = pixels.len();
@@ -287,6 +299,7 @@ impl MedianCut {
         let mut done = false;
         let hist_color_total = color_hist.color_vec.len();
 
+        // Move the rgb values with the count to the underlying image vector along with their volume
         self.image = Vec::with_capacity(hist_color_total);
         for i in 0..hist_color_total {
             let rgb = color_hist.color_vec[i];
@@ -294,13 +307,16 @@ impl MedianCut {
             self.image.push(ColorChannel::new_rgb(rgb, cnt));
         }
 
+        // If their arent enough colors then we just return it early with whatever we have
         if hist_color_total <= pallet_size as usize {
             self.image.clone()
         } else {
+            // Create first box to split from, with all the colors
             let initial_box = ColorBucket::new(0, hist_color_total - 1, 0, &self.image);
             let mut color_set = Vec::new();
             color_set.push(initial_box);
 
+            // Continue splitting until we've reached our pallette size (16)
             while count < pallet_size && !done {
                 let new_box: Option<ColorBucket>;
                 match self.get_next_split(&mut color_set) {
@@ -319,6 +335,7 @@ impl MedianCut {
         }
     }
 
+    // Average all the colors in th
     fn avg_colors(&mut self, color_buckets: &[ColorBucket]) -> Vec<ColorChannel> {
         let n = color_buckets.len();
         let mut avg_colors = Vec::with_capacity(n);
