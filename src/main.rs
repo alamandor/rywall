@@ -76,11 +76,7 @@ fn main() -> Result<(), Error> {
         for color in current_colors.unwrap().colors.iter() {
             println!("color = {}", color.clone().unwrap());
         }
-
-
-
     }
-
 
     // Done
     Ok(())
