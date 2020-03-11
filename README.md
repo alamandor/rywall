@@ -27,6 +27,8 @@ My goal would be to write a rust program that can manage and implement differet 
 
 # How it Works
 - When you run the app with the -i option followed by a jpeg image, the most common 16 colors are grabbed from the image. This color pallete is saved to a text file that follows the syntax for defining hexadecimal colors as outlined by the Xresource system. Mainly, it adds the \* wildcard identifier followed by a color[n] from n = (0-15).
+	- The optional -s flag allows the user to enter a filename to save the colorscheme to.
+	- After which, they can be sourced to the users .Xresource file by the user with one line: ``` #include "/path/to/colorscheme_file ```
 - To help make sure that the foreground and background colors are as reasonable as they can be, the color pallete has its luminance calculated and the darkest color is assigned to the background, and the brighest color to the foreground.
 - The algorithm for the Median Cut is well-documented on the internet, the best documentee ones tended to be in Java.
 - Median Cut works but repeately splitting boxes that contain the colors and the volume of the colors in the image provided. We split the boxes until we get 16, along the way sorting the colors in descending order so we can ensure the split happens at distinct values. The end result is averaged at the end and the pallette is returned in the form of seperate vector of colorChannels, the data strcuture to hold the "pixels".
