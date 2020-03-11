@@ -21,8 +21,9 @@ fn main() -> Result<(), Error> {
            -h, --help           Display this message\n\
            -i, --image <file>   Use supplied file for colorscheme\n\
            -s  --save <name>    Use supplied name for colorscheme file generated\n\
-           -r                   Reload the default .Xresources file cannot use with -c\n\
-           -c                   Reload Xresources with generated colorscheme")
+           -r                   Reload the default .Xresources file cannot use with -n\n\
+           -n --now             Reload Xresources with generated colorscheme\n\
+           -c --colorscheme     Load the provided colorscheme file made with the tool in xrdb")
         .usage("rusty-theme [-i <image file path>]\n\t-- [-c Immediately load generated colorscheme]\n\t-- [-r Load the user's default .Xresources file in their home directory] (Cannot be used with the -c Option)]\n\t-- [-s <Desired colorscheme name>]")
         .about("Use existing images to calculate a pallet for Xresources")
         .arg(
@@ -41,10 +42,17 @@ fn main() -> Result<(), Error> {
                 .takes_value(true),
         )
         .arg(
+            Arg::with_name("now")
+                .short("n")
+                .long("now")
+                .help("Immediately load the created colorscheme in xrdb"),
+        )
+        .arg(
             Arg::with_name("colorscheme")
                 .short("c")
                 .long("colorscheme")
-                .help("load the created colorscheme in xrdb"),
+                .help("Load the provided colorscheme")
+                .takes_value(true),
         )
         .arg(
             Arg::with_name("reload")
@@ -62,6 +70,17 @@ fn main() -> Result<(), Error> {
     let matches = cli.get_matches();
     let save_file: &str;
 
+
+    if matches.is_present("colorscheme") {
+        let file = matches.value_of("colorscheme").unwrap();
+        let _p_output = Command::new("xrdb")
+            .arg(file)
+            .output()
+            .expect("failed to execute xrdb");
+        return Ok(());
+
+    }
+
     // Load Pallet and apply colorscheme from a JPEG file
     if matches.is_present("image") {
         let image_file_name = matches.value_of("image").unwrap();
@@ -74,8 +93,8 @@ fn main() -> Result<(), Error> {
             save_file = "/colorscheme";
         }
         // Reload colorscheme  file
-        if matches.is_present("colorscheme") {
-            let p_output = Command::new("xrdb")
+        if matches.is_present("now") {
+            let _p_output = Command::new("xrdb")
                 .arg(save_file)
                 .output()
                 .expect("failed to execute xrdb");
@@ -83,21 +102,22 @@ fn main() -> Result<(), Error> {
     }
 
 
+
     // Reload Default Xresource file
     if matches.is_present("reload") {
-        let mut home = home_dir();
+        let home = home_dir();
         match home {
             Some(x) => {
                 let mut home = x;
                 home.push(".Xresources");
-                if matches.occurrences_of("colorscheme") == 0 {
-                    let p_output = Command::new("xrdb")
+                if matches.occurrences_of("now") == 0 {
+                    let _p_output = Command::new("xrdb")
                         .arg(home)
                         .output()
                         .expect("failed to execute xrdb");
                 }
                 else {
-                    println!("Can't use reload (-r) default .Xresources file with the -c option");
+                    println!("Can't use reload (-r) default .Xresources file with the -n option");
                 }
             },
             None => {
