@@ -57,3 +57,8 @@ Xresource colors can be defined in programs like i3 using the existing system co
 - Finding ways to test this in the code was a big problem since the end result is based on a visual product, and the fact that the quantized colors are averages of orginal values passed inside, so I went to online pallete generators and compared by pallete with theres until I got consistent and satisfactory results.
 - [Online color grabber 1](https://superdevresources.com/tools/color-extractor)
 - [Online color grabber 2](https://labs.tineye.com/color/cfe365d6bf120f52b757156b1fea15b3b2299643?ignore_background=True&width=250&color_format=hex&ignore_interior_background=True&height=140)
+# Future Plans
+- Add abilty to **Randomly** select color values for colors 0-15 for the colorcheme.
+	- This is to address some images not being suitable for all around colorschemes
+	- I would like to be able to cycle repeatley on input until a desired pallette is reached
+- Add ability to create an organized colorcheme directory that we can search in subsequent runs of the program

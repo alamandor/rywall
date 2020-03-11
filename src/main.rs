@@ -1,5 +1,6 @@
 use clap::{App, Arg};
 use float_cmp::*;
+use dirs::home_dir;
 use image::ImageFormat;
 use std::collections::HashMap;
 use std::fs::*;
@@ -66,7 +67,7 @@ fn main() -> Result<(), Error> {
         let image_file_name = matches.value_of("image").unwrap();
         if matches.is_present("save") {
             save_file = matches.value_of("save").unwrap();
-            println!("{:?}", save_file);
+            println!("{}", save_file);
             colors_from_image(image_file_name, save_file)?;
         } else {
             colors_from_image(image_file_name, "")?;
@@ -78,21 +79,30 @@ fn main() -> Result<(), Error> {
                 .arg(save_file)
                 .output()
                 .expect("failed to execute xrdb");
-            println!("{:?}", p_output);
         }
     }
 
+
     // Reload Default Xresource file
     if matches.is_present("reload") {
-        if matches.occurrences_of("colorscheme") == 0 {
-        let p_output = Command::new("xrdb")
-            .arg("/home/aag/.Xresources")
-            .output()
-            .expect("failed to execute xrdb");
-        println!("{:?}", p_output);
-        }
-        else {
-            println!("Can't use reload (-r) default .Xresources file with the -c option");
+        let mut home = home_dir();
+        match home {
+            Some(x) => {
+                let mut home = x;
+                home.push(".Xresources");
+                if matches.occurrences_of("colorscheme") == 0 {
+                    let p_output = Command::new("xrdb")
+                        .arg(home)
+                        .output()
+                        .expect("failed to execute xrdb");
+                }
+                else {
+                    println!("Can't use reload (-r) default .Xresources file with the -c option");
+                }
+            },
+            None => {
+                println!("Cannot find Home Directory, make sure ENV variable is set");
+            }
         }
     }
 
