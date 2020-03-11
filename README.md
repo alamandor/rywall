@@ -23,9 +23,17 @@ My goal would be to write a rust program that can manage and implement differet 
   - [Pywal (python)](https://github.com/dylanaraps/pywal)
   - [Java Example of Median Cut](http://jcs.mobile-utopia.com/jcs/16423_ColorCutQuantizer.html)
   - [Calculating Luminance from rgb values](https://stackoverflow.com/questions/596216/formula-to-determine-brightness-of-rgb-color)
+  - [Median Cut](https://github.com/biometrics/imagingbook/blob/master/src/color/MedianCutQuantizer.java)
 
 # Quick Run
-Run ```rusty-theme -i [image_file] -s [desired colorscheme name] ```
+- Run ```rusty-theme -i [image_file] -s [desired colorscheme name] ```
+OR
+- Run ```cargo run -- -i image_file.jpg -s aagColorscheme``` Saves a colorscheme generated image_file to the file aagColorscheme.
+
+- Add ```#include "/path/to/colorscheme_file"``` to your Xresources file and comment out the existing colors if needed.
+
+# Further Use
+Xresource colors can be defined in programs like i3 using the existing system colors. Colors that can be found with this tool.
 
 # How it Works
 - When you run the app with the -i option followed by a jpeg image, the most common 16 colors are grabbed from the image. This color pallete is saved to a text file that follows the syntax for defining hexadecimal colors as outlined by the Xresource system. Mainly, it adds the \* wildcard identifier followed by a color[n] from n = (0-15).
@@ -44,3 +52,4 @@ Run ```rusty-theme -i [image_file] -s [desired colorscheme name] ```
 # Testing
 - Finding ways to test this in the code was a big problem since the end result is based on a visual product, and the fact that the quantized colors are averages of orginal values passed inside, so I went to online pallete generators and compared by pallete with theres until I got consistent and satisfactory results.
 - [Online color grabber 1](https://superdevresources.com/tools/color-extractor)
+- [Online color grabber 2](https://labs.tineye.com/color/cfe365d6bf120f52b757156b1fea15b3b2299643?ignore_background=True&width=250&color_format=hex&ignore_interior_background=True&height=140)
