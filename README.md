@@ -43,3 +43,4 @@ Run ```rusty-theme -i [image_file] -s [desired colorscheme name] ```
 - Comparing float values for the luminance values of the generated colors required an outside library ```float-cmp``` since the compiler was giving me trouble for testing for equality among float values.
 # Testing
 - Finding ways to test this in the code was a big problem since the end result is based on a visual product, and the fact that the quantized colors are averages of orginal values passed inside, so I went to online pallete generators and compared by pallete with theres until I got consistent and satisfactory results.
+- [Online color grabber 1](https://superdevresources.com/tools/color-extractor)
