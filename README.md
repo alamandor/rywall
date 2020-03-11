@@ -6,12 +6,12 @@ Customizing my personal linux distro with different window managers and compnent
 My goal would be to write a rust program that can manage and implement differet color palletes, to create the ability for the user to change color schemes on the fly easily.
 ## Features desired
 - Have a single location where different color "config" files are stored where the app can read in the color values and update the appropriate config files depending on the OS tool being updated.
-- Add the ability to generate color palletes randomly, but try and adjust it after so they don't "clash" *Perhaps normalize is a better term not sure* 
+- Add the ability to generate color palletes randomly, but try and adjust it after so they don't "clash" *Perhaps normalize is a better term not sure*
 - Add the ability to genereate a color pallete from a supplied image file.
   - I'm thinking this will involved reading in the bytes of the image individually to construct a color pallete
   - I know there are algorithms used by tools like GIMP and photoshop that possibly could be useful that I could implement for my needs
   This might be a good oppurtunity to learn more about working with threads, and concurrent programming.
-  
+
 - Add feature that can connect and retrieve/update a git repo with your colorschemes. The idea being that the app and retrive your favorite schemes quickly on a new distro install or computer.
   - Maybe find a way to interact with github API
   - Else just evoke shell with git commands from within rust to pull remote repos
@@ -20,10 +20,13 @@ My goal would be to write a rust program that can manage and implement differet 
 - [Method in which i3 reads colors (anything loaded into the X resource database)](https://i3wm.org/docs/userguide.html#xresources)
 ### Similar projects for inspiration:
   - [Pywal (python)](https://github.com/dylanaraps/pywal)
-- Rust image manipulation library [palette](https://github.com/Ogeon/palette)
-### Web Framworks
-I may want to interact with the github web API directly in that case:
-- [Rocket](https://crates.io/crates/rocket)
-- [Iron](https://crates.io/crates/iron)
-- [Warp](https://crates.io/crates/warp)
-- [Gotham](https://github.com/gotham-rs/gotham)
+
+
+# How it Works
+- When you run the app with the -i option followed by a jpeg image, the most common 16 colors are grabbed from the image. This color pallete is saved to a text file that follows the syntax for defining hexadecimal colors as outlined by the Xresource system. Mainly, it adds the \* wildcard identifier followed by a color[n] from n = (0-15).
+- To help make sure that the foreground and background colors are as reasonable as they can be, the color pallete has its luminance calculated and the darkest color is assigned to the background, and the brighest color to the foreground.
+
+# Issues
+- A big issue was figuring ways to deal with converting the incoming vector of 8-bit integers representing the rgb values. To do the Median Mean Cut Quantization [https://en.wikipedia.org/wiki/Median_cut] I needed to used 32-bit values, so the conversion involved iterating through the 8-bit vector and building them as 32-bit integers, making sure to acknowledge that the resulting array is a quarter of the length.
+- The other major obstactle was getting convertable with bit-wise operations, mainly the bit-wise AND (&). I had to do research on my own to figure out how to use them. However, I found useful ways to utilize them to break apart individual rgb values from a single rgb integer. Many of the resources I used to read up on the algorithm had implementations with bit-wise operations and I could not find a way to do it without using them. But after this project I definitely have a better understanding of them.
+- Formatting strings into a form accepted by the Xresources file took some time as well, but I found that the format! macro was a life-saver for sure.
