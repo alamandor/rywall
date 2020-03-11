@@ -1,5 +1,6 @@
 use clap::{App, Arg};
 use image::ImageFormat;
+use std::process::{Command};
 use std::collections::HashMap;
 use std::fs::*;
 use std::io::{BufReader, BufRead, Write, Error};
@@ -7,7 +8,7 @@ use xrdb::*;
 mod mcq_image;
 
 
-fn main() {
+fn main() -> Result<(), Error> {
     let cli = App::new("rusty-theme")
         .version("1.0")
         .usage("rusty-theme [-i <image file path>]")
@@ -25,7 +26,8 @@ fn main() {
             Arg::with_name("save")
                 .short("s")
                 .long("save")
-                .help("save created pallet in a theme file"),
+                .help("save created pallet in a theme file")
+                .takes_value(true),
         )
         .arg(
             Arg::with_name("reload")
@@ -42,13 +44,47 @@ fn main() {
 
     let matches = cli.get_matches();
 
+    // Load Pallet and apply colorscheme from a JPEG file
     if matches.is_present("image") {
         let image_file_name = matches.value_of("image").unwrap();
-        colors_from_image(image_file_name);
+        if matches.is_present("save") {
+            let save_file = matches.value_of("save").unwrap();
+            colors_from_image(image_file_name, save_file)?;
+        }
+        else{
+            colors_from_image(image_file_name, "")?;
+        }
     }
+
+
+    // Reload Xresource file
+    if matches.is_present("reload") {
+        let p_output =
+            Command::new("xrdb")
+            .arg("/home/aag/.Xresources")
+            .output()
+            .expect("failed to execute xrdb");
+        println!("{:?}", p_output);
+    }
+
+    // Print the Current colorscheme in the XDatabase
+    if matches.is_present("list") {
+        let current_colors = xrdb::Colors::new("*");
+
+        println!("{:?}", current_colors);
+    }
+
+
+
+
+
+
+
+    // Done
+    Ok(())
 }
 
-fn colors_from_image(file: &str) -> Result<(), Error>  {
+fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error>  {
     let pallet_size = 16;
     println!("Reading image {}", file);
 
@@ -62,8 +98,13 @@ fn colors_from_image(file: &str) -> Result<(), Error>  {
     };
 
     let common_colors = q_col.get_quantized_colors();
-    let path = "./colorscheme";
-
+    let path: &str;
+    if !o_path.is_empty() {
+        path = o_path;
+    }
+    else {
+        path = "./colorscheme";
+    }
     let mut output = File::create(path)?;
 
     let mut all_colors = HashMap::new();
@@ -74,8 +115,9 @@ fn colors_from_image(file: &str) -> Result<(), Error>  {
 
         // If number are too low add just enough to get them over 16.
         // Messy fix for not getting format! to pad numbers below 16 with a zero in Hexadecimal.
+
         if q.red <= 16 {
-            q.red = (16 - q.red) + 1;
+            q.red += (16 - q.red) + 1;
         }
         if q.grn <= 16 {
             q.grn += (16 - q.grn) + 1;
@@ -84,9 +126,11 @@ fn colors_from_image(file: &str) -> Result<(), Error>  {
             q.blu += (16 - q.blu) + 1;
         }
 
+
         // Find the luminance (brightness) of color. brighter = higher
         let lum = calc_luminance(q.red, q.grn, q.blu);
-        let x_color_str = format!("*color{}: #{:X}{:X}{:X}", x, q.red, q.grn, q.blu,);
+        let x_color_str = format!("*color{}: #{:X}{:X}{:X}", x, q.red, q.grn, q.blu);
+        // println!("{:?}", x_color_str);
         writeln!(output,"{}",  x_color_str);
         all_colors.insert(x_color_str, lum);
 
@@ -118,13 +162,12 @@ fn colors_from_image(file: &str) -> Result<(), Error>  {
     let fg_str: Vec<&str> = fg_color.split(" ").collect();
 
 
+    // Construct string for file that has the brightest and darkest values
     let bg_file_string = format!("*background: {}", bg_str[1]);
     let fg_file_string = format!("*foreground: {}", fg_str[1]);
 
-
     writeln!(output, "{}", bg_file_string)?;
     writeln!(output, "{}", fg_file_string)?;
-
 
     let input = File::open(path)?;
     let buffered = BufReader::new(input);
@@ -138,6 +181,7 @@ fn colors_from_image(file: &str) -> Result<(), Error>  {
 
 }
 
+// TODO implement an iterator method to ColorChannel that takes this as a closure?
 fn calc_luminance(r: u8, g: u8, b: u8) -> f64 {
 
     (r as f64 * 0.299 + g as f64 * 0.587 + b as f64 * 0.114) / 256.0
