@@ -15,11 +15,15 @@ My goal would be to write a rust program that can manage and implement differet 
 - Add feature that can connect and retrieve/update a git repo with your colorschemes. The idea being that the app and retrive your favorite schemes quickly on a new distro install or computer.
   - Maybe find a way to interact with github API
   - Else just evoke shell with git commands from within rust to pull remote repos
-
+# Project Name
+- rusty-theme
+# Author
+- Alec Greenaway
+- aag3@pdx.edu
 # Useful Info
 - [Method in which i3 reads colors (anything loaded into the X resource database)](https://i3wm.org/docs/userguide.html#xresources)
 - [Xresources](https://wiki.archlinux.org/index.php/x_resources)
-### Sources:
+# Sources:
   - [Pywal (python)](https://github.com/dylanaraps/pywal)
   - [Java Example of Median Cut](http://jcs.mobile-utopia.com/jcs/16423_ColorCutQuantizer.html)
   - [Calculating Luminance from rgb values](https://stackoverflow.com/questions/596216/formula-to-determine-brightness-of-rgb-color)
