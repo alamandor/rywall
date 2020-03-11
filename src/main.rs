@@ -1,9 +1,11 @@
 use clap::{App, Arg};
 use image::ImageFormat;
+use std::collections::HashMap;
 use std::fs::*;
 use std::io::{BufReader, BufRead, Write, Error};
 use xrdb::*;
 mod mcq_image;
+
 
 fn main() {
     let cli = App::new("rusty-theme")
@@ -64,6 +66,7 @@ fn colors_from_image(file: &str) -> Result<(), Error>  {
 
     let mut output = File::create(path)?;
 
+    let mut all_colors = HashMap::new();
 
 
     for x in 0..pallet_size {
@@ -81,17 +84,61 @@ fn colors_from_image(file: &str) -> Result<(), Error>  {
             q.blu += (16 - q.blu) + 1;
         }
 
-        let x_color_str = format!("Color{}: #{:x}{:x}{:x}", x, q.red, q.grn, q.blu,);
+        // Find the luminance (brightness) of color. brighter = higher
+        let lum = calc_luminance(q.red, q.grn, q.blu);
+        let x_color_str = format!("*color{}: #{:X}{:X}{:X}", x, q.red, q.grn, q.blu,);
+        writeln!(output,"{}",  x_color_str);
+        all_colors.insert(x_color_str, lum);
 
-        writeln!(output, "{}", x_color_str)?;
     }
+
+
+    let mut lum_max = std::f64::MIN;
+    let mut lum_min = std::f64::MAX;
+
+    for val in all_colors.values() {
+        if *val < lum_min {
+            lum_min = *val;
+        }
+        if *val > lum_max {
+            lum_max = *val;
+        }
+
+    }
+
+    // Get brightest color for fg and darkest color for bg
+    let fg = all_colors.iter().find_map(|(key, &val)| if val == lum_max {Some(key)} else {None});
+    let bg = all_colors.iter().find_map(|(key, &val)| if val == lum_min {Some(key)} else {None});
+
+
+
+    let bg_color = bg.unwrap().as_str();
+    let fg_color = fg.unwrap().as_str();
+    let bg_str: Vec<&str> = bg_color.split(" ").collect();
+    let fg_str: Vec<&str> = fg_color.split(" ").collect();
+
+
+    let bg_file_string = format!("*background: {}", bg_str[1]);
+    let fg_file_string = format!("*foreground: {}", fg_str[1]);
+
+
+    writeln!(output, "{}", bg_file_string)?;
+    writeln!(output, "{}", fg_file_string)?;
+
 
     let input = File::open(path)?;
     let buffered = BufReader::new(input);
+
+    println!("This is your new Xresources Colorcheme:");
     for line in buffered.lines() {
         println!("{}", line?);
     }
 
     Ok(())
 
+}
+
+fn calc_luminance(r: u8, g: u8, b: u8) -> f64 {
+
+    (r as f64 * 0.299 + g as f64 * 0.587 + b as f64 * 0.114) / 256.0
 }
