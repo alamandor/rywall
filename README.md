@@ -35,6 +35,9 @@ My goal would be to write a rust program that can manage and implement differet 
 - Run ```cargo run -- -i image_file.jpg -s aagColorscheme``` Saves a colorscheme generated image_file to the file aagColorscheme.
 
 - Add ```#include "/path/to/colorscheme_file"``` to your Xresources file and comment out the existing colors if needed.
+	- OR
+- Use ```-r``` To use the default .Xresources from $HOME.
+	- ```-n``` command following generating a new colorscheme
 
 # Further Use
 - Xresource colors can be defined in programs like i3 using the existing system colors. Colors that can be found with this tool.
