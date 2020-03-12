@@ -34,6 +34,7 @@ My goal would be to write a rust program that can manage and implement differet 
 	- OR
 - Run ```cargo run -- -i image_file.jpg -s aagColorscheme``` Saves a colorscheme generated image_file to the file aagColorscheme.
 
+### Reload .Xresources on-demand, through ```xrdb```
 - Add ```#include "/path/to/colorscheme_file"``` to your Xresources file and comment out the existing colors if needed.
 	- OR
 - Use ```-r``` To use the default .Xresources from $HOME.
