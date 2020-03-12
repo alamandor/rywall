@@ -1,9 +1,9 @@
 use clap::{App, Arg};
-use rand::seq::SliceRandom;
-use rand::{thread_rng};
 use dirs::home_dir;
 use float_cmp::*;
 use image::ImageFormat;
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 use std::collections::HashMap;
 use std::fs::*;
 use std::io::{BufRead, BufReader, Error, Write};
@@ -78,15 +78,15 @@ fn main() -> Result<(), Error> {
             .arg(file)
             .status()
             .expect("failed to execute xrdb");
-            match p_output.code() {
-                Some(code) => {
-                    if code != 0 {
-                        println!("Error in running xrdb");
-                        return Ok(());
-                    }
-                },
-                None => println!("Process terminated by signal")
+        match p_output.code() {
+            Some(code) => {
+                if code != 0 {
+                    println!("Error in running xrdb");
+                    return Ok(());
+                }
             }
+            None => println!("Process terminated by signal"),
+        }
         return Ok(());
     }
 
@@ -113,8 +113,8 @@ fn main() -> Result<(), Error> {
                         println!("Error in running xrdb");
                         return Ok(());
                     }
-                },
-                None => println!("Process terminated by signal")
+                }
+                None => println!("Process terminated by signal"),
             }
         }
     }
@@ -137,8 +137,8 @@ fn main() -> Result<(), Error> {
                                 println!("Error in running xrdb");
                                 return Ok(());
                             }
-                        },
-                        None => println!("Process terminated by signal")
+                        }
+                        None => println!("Process terminated by signal"),
                     }
                 } else {
                     println!("Can't use reload (-r) default .Xresources file with the -n option");
@@ -159,12 +159,12 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn shuffle_colors(colormap: &HashMap<String, f64>) -> Vec<String>{
+fn shuffle_colors(colormap: &HashMap<String, f64>) -> Vec<String> {
     let mut names = Vec::new();
     let mut hex = Vec::new();
     let mut rng = thread_rng();
 
-    for key in colormap.keys(){
+    for key in colormap.keys() {
         let name_and_hex: Vec<&str> = key.split(' ').collect();
         names.push(name_and_hex[0]);
         hex.push(name_and_hex[1]);
@@ -194,7 +194,6 @@ fn list_loaded_colors() {
     for color in current_colors.unwrap().colors.iter() {
         println!("color = {}", color.clone().unwrap());
     }
-
 }
 
 fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
@@ -285,7 +284,6 @@ fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
 
     let bg_str: Vec<&str> = bg_color.split(' ').collect();
     let fg_str: Vec<&str> = fg_color.split(' ').collect();
-
 
     // Construct string for file that has the brightest and darkest values
     let bg_file_string = format!("*background: {}", bg_str[1]);

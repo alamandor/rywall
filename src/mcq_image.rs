@@ -283,7 +283,9 @@ impl MedianCut {
         // Grab groups of 4 8bit numbers and interpet them as single u32 numbers , slice will be a quarter of the length as a result.
 
         dominant_colors.quantized = dominant_colors.median_cut(&vec_32_bit, pallet_size);
-        dominant_colors.quantized.sort_by(|a, b| b.count.cmp(&a.count));
+        dominant_colors
+            .quantized
+            .sort_by(|a, b| b.count.cmp(&a.count));
 
         dominant_colors
     }

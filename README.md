@@ -37,7 +37,15 @@ My goal would be to write a rust program that can manage and implement differet 
 - Add ```#include "/path/to/colorscheme_file"``` to your Xresources file and comment out the existing colors if needed.
 
 # Further Use
-Xresource colors can be defined in programs like i3 using the existing system colors. Colors that can be found with this tool.
+- Xresource colors can be defined in programs like i3 using the existing system colors. Colors that can be found with this tool.
+- For my testing, I used st terminal which has the option to use the colors defined by Xresources, Xterm can also be used but this hasnt been thouroughly tested.
+# Options
+- h, --help           Help
+- i, --image <file>   Use supplied file for colorscheme
+- s  --save <name>    Use supplied name for colorscheme file generated
+- r                   Reload the default .Xresources file cannot use with -n
+- n --now             Reload Xresources with generated colorscheme
+- c --colorscheme     Load the provided colorscheme file made with the tool in xrdb
 
 # How it Works
 - When you run the app with the -i option followed by a jpeg image, the most common 16 colors are grabbed from the image. This color pallete is saved to a text file that follows the syntax for defining hexadecimal colors as outlined by the Xresource system. Mainly, it adds the \* wildcard identifier followed by a color[n] from n = (0-15).
@@ -57,6 +65,7 @@ Xresource colors can be defined in programs like i3 using the existing system co
 - Finding ways to test this in the code was a big problem since the end result is based on a visual product, and the fact that the quantized colors are averages of orginal values passed inside, so I went to online pallete generators and compared by pallete with theres until I got consistent and satisfactory results.
 - [Online color grabber 1](https://superdevresources.com/tools/color-extractor)
 - [Online color grabber 2](https://labs.tineye.com/color/cfe365d6bf120f52b757156b1fea15b3b2299643?ignore_background=True&width=250&color_format=hex&ignore_interior_background=True&height=140)
+- The app displays the generated colorscheme after it is done and has options to retreive the actual colors be used by the Xsystem. So this can be verified by using the tool or running xrdb yourself.
 # Future Plans
 - Add abilty to **Randomly** select color values for colors 0-15 for the colorcheme.
 	- This is to address some images not being suitable for all around colorschemes
