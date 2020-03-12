@@ -2,7 +2,7 @@ use std::convert::TryInto;
 
 // Data structs used based from Java implementation provided in README
 
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, Copy, Default)]
 struct ColorBucket {
     lower: usize,
     upper: usize,
@@ -82,7 +82,7 @@ impl ColorBucket {
 
         for c in colors.iter().take(self.upper).skip(self.lower) {
             // let color = colors[i];
-            self.count += c.cnt;
+            self.count += c.count;
 
             self.larger(c.red as i32, Color::Red);
             self.larger(c.grn as i32, Color::Green);
@@ -136,7 +136,7 @@ impl ColorBucket {
         let half = self.count / 2;
         let mut pixel_num = 0;
         for median in self.lower..self.upper {
-            pixel_num += colors[median].cnt;
+            pixel_num += colors[median].count;
 
             if pixel_num >= half {
                 return median;
@@ -152,7 +152,7 @@ impl ColorBucket {
         let mut b_sum = 0;
         let mut n: usize = 0;
         for channel in colors.iter().take(self.upper).skip(self.lower) {
-            let c = channel.cnt;
+            let c = channel.count;
             r_sum += c * channel.red as usize;
             g_sum += c * channel.grn as usize;
             b_sum += c * channel.blu as usize;
@@ -178,27 +178,27 @@ pub struct ColorChannel {
     pub red: u8,
     pub grn: u8,
     pub blu: u8,
-    pub cnt: usize,
+    pub count: usize,
 }
 
 impl ColorChannel {
-    fn new_rgb(rgb: u32, cnt: usize) -> ColorChannel {
+    fn new_rgb(rgb: u32, count: usize) -> ColorChannel {
         ColorChannel {
             rgb: (rgb & 0x00FF_FFFF),
             blu: ((rgb & 0x00FF_0000) >> 16) as u8,
             grn: ((rgb & 0xFF00) >> 8) as u8,
             red: (rgb & 0xFF) as u8,
-            cnt,
+            count,
         }
     }
 
-    fn new_colors(red: u8, grn: u8, blu: u8, cnt: usize) -> ColorChannel {
+    fn new_colors(red: u8, grn: u8, blu: u8, count: usize) -> ColorChannel {
         ColorChannel {
             rgb: ((red as u32 & 0xff) << 16) | ((grn as u32 & 0xff) << 8) | blu as u32 & 0xff,
             red,
             grn,
             blu,
-            cnt,
+            count,
         }
     }
 }
@@ -283,7 +283,7 @@ impl MedianCut {
         // Grab groups of 4 8bit numbers and interpet them as single u32 numbers , slice will be a quarter of the length as a result.
 
         dominant_colors.quantized = dominant_colors.median_cut(&vec_32_bit, pallet_size);
-        dominant_colors.quantized.sort_by(|a, b| b.cnt.cmp(&a.cnt));
+        dominant_colors.quantized.sort_by(|a, b| b.count.cmp(&a.count));
 
         dominant_colors
     }
@@ -302,8 +302,8 @@ impl MedianCut {
         self.image = Vec::with_capacity(hist_color_total);
         for i in 0..hist_color_total {
             let rgb = color_hist.color_vec[i];
-            let cnt = color_hist.count_vec[i];
-            self.image.push(ColorChannel::new_rgb(rgb, cnt));
+            let count = color_hist.count_vec[i];
+            self.image.push(ColorChannel::new_rgb(rgb, count));
         }
 
         // If their arent enough colors then we just return it early with whatever we have

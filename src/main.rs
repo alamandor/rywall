@@ -72,10 +72,19 @@ fn main() -> Result<(), Error> {
 
     if matches.is_present("colorscheme") {
         let file = matches.value_of("colorscheme").unwrap();
-        let _p_output = Command::new("xrdb")
+        let p_output = Command::new("xrdb")
             .arg(file)
-            .output()
+            .status()
             .expect("failed to execute xrdb");
+            match p_output.code() {
+                Some(code) => {
+                    if code != 0 {
+                        println!("Error in running xrdb");
+                        return Ok(());
+                    }
+                },
+                None => println!("Process terminated by signal")
+            }
         return Ok(());
     }
 
@@ -92,10 +101,19 @@ fn main() -> Result<(), Error> {
         }
         // Reload colorscheme  file
         if matches.is_present("now") {
-            let _p_output = Command::new("xrdb")
+            let p_output = Command::new("xrdb")
                 .arg(save_file)
-                .output()
+                .status()
                 .expect("failed to execute xrdb");
+            match p_output.code() {
+                Some(code) => {
+                    if code != 0 {
+                        println!("Error in running xrdb");
+                        return Ok(());
+                    }
+                },
+                None => println!("Process terminated by signal")
+            }
         }
     }
 
@@ -107,10 +125,19 @@ fn main() -> Result<(), Error> {
                 let mut home = x;
                 home.push(".Xresources");
                 if matches.occurrences_of("now") == 0 {
-                    let _p_output = Command::new("xrdb")
+                    let p_output = Command::new("xrdb")
                         .arg(home)
-                        .output()
+                        .status()
                         .expect("failed to execute xrdb");
+                    match p_output.code() {
+                        Some(code) => {
+                            if code != 0 {
+                                println!("Error in running xrdb");
+                                return Ok(());
+                            }
+                        },
+                        None => println!("Process terminated by signal")
+                    }
                 } else {
                     println!("Can't use reload (-r) default .Xresources file with the -n option");
                 }
@@ -123,21 +150,26 @@ fn main() -> Result<(), Error> {
 
     // Print the Current colorscheme in the XDatabase
     if matches.is_present("list") {
-        let current_colors = xrdb::Colors::new("*");
-
-        let fg = current_colors.clone().unwrap().fg.unwrap();
-        let bg = current_colors.clone().unwrap().bg.unwrap();
-        println!("Current colorscheme loaded by Xresources database");
-        println!("fg = {:?}", fg);
-        println!("bg = {:?}", bg);
-
-        for color in current_colors.unwrap().colors.iter() {
-            println!("color = {}", color.clone().unwrap());
-        }
+        list_loaded_colors();
     }
 
     // Done
     Ok(())
+}
+
+fn list_loaded_colors() {
+    let current_colors = xrdb::Colors::new("*");
+
+    let fg = current_colors.clone().unwrap().fg.unwrap();
+    let bg = current_colors.clone().unwrap().bg.unwrap();
+    println!("Current colorscheme loaded by Xresources database");
+    println!("fg = {:?}", fg);
+    println!("bg = {:?}", bg);
+
+    for color in current_colors.unwrap().colors.iter() {
+        println!("color = {}", color.clone().unwrap());
+    }
+
 }
 
 fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
@@ -218,8 +250,14 @@ fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
 
     let bg_color = bg.unwrap().as_str();
     let fg_color = fg.unwrap().as_str();
+
+    // Confirm what was found is one of our colors
+    assert!(all_colors.contains_key(bg_color));
+    assert!(all_colors.contains_key(fg_color));
+
     let bg_str: Vec<&str> = bg_color.split(' ').collect();
     let fg_str: Vec<&str> = fg_color.split(' ').collect();
+
 
     // Construct string for file that has the brightest and darkest values
     let bg_file_string = format!("*background: {}", bg_str[1]);
