@@ -1,4 +1,6 @@
 use clap::{App, Arg};
+use rand::seq::SliceRandom;
+use rand::{thread_rng};
 use dirs::home_dir;
 use float_cmp::*;
 use image::ImageFormat;
@@ -157,6 +159,29 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
+fn shuffle_colors(colormap: &HashMap<String, f64>) -> Vec<String>{
+    let mut names = Vec::new();
+    let mut hex = Vec::new();
+    let mut rng = thread_rng();
+
+    for key in colormap.keys(){
+        let name_and_hex: Vec<&str> = key.split(' ').collect();
+        names.push(name_and_hex[0]);
+        hex.push(name_and_hex[1]);
+        names.shuffle(&mut rng);
+        hex.shuffle(&mut rng);
+    }
+
+    let mut new_strings = Vec::new();
+    for name_hex in names.iter().zip(hex.iter_mut()) {
+        let (n, h) = name_hex;
+        let full_string = format!("{}{}", n, h);
+        new_strings.push(full_string.clone());
+    }
+
+    new_strings
+}
+
 fn list_loaded_colors() {
     let current_colors = xrdb::Colors::new("*");
 
@@ -247,6 +272,9 @@ fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
             None
         }
     });
+
+    let rand_colors: Vec<String> = shuffle_colors(&all_colors);
+    println!("{:?}", rand_colors);
 
     let bg_color = bg.unwrap().as_str();
     let fg_color = fg.unwrap().as_str();
