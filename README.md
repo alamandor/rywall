@@ -40,12 +40,12 @@ My goal would be to write a rust program that can manage and implement differet 
 - Xresource colors can be defined in programs like i3 using the existing system colors. Colors that can be found with this tool.
 - For my testing, I used st terminal which has the option to use the colors defined by Xresources, Xterm can also be used but this hasnt been thouroughly tested.
 # Options
-- ```h, --help```           Display Help
-- ```i, --image <file> ```   Use supplied file for colorscheme
-- ``` s  --save <name> ```    Use supplied name for colorscheme file generated
-- ``` r ```                   Reload the default .Xresources file cannot use with -n
-- ``` n --now ```            Reload Xresources with generated colorscheme
-- ```c --colorscheme ```     Load the provided colorscheme file made with the tool in xrdb
+- ```-h, --help```           Display Help
+- ```-i, --image <file> ```   Use supplied file for colorscheme
+- ```-s  --save <name> ```    Use supplied name for colorscheme file generated
+- ```-r ```                   Reload the default .Xresources file cannot use with -n
+- ```-n --now ```            Reload Xresources with generated colorscheme
+- ```-c --colorscheme ```     Load the provided colorscheme file made with the tool in xrdb
 
 # How it Works
 - When you run the app with the -i option followed by a jpeg image, the most common 16 colors are grabbed from the image. This color pallete is saved to a text file that follows the syntax for defining hexadecimal colors as outlined by the Xresource system. Mainly, it adds the \* wildcard identifier followed by a color[n] from n = (0-15).
