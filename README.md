@@ -28,6 +28,9 @@ My goal would be to write a rust program that can manage and implement differet 
   - [Java Example of Median Cut](http://jcs.mobile-utopia.com/jcs/16423_ColorCutQuantizer.html)
   - [Calculating Luminance from rgb values](https://stackoverflow.com/questions/596216/formula-to-determine-brightness-of-rgb-color)
   - [Median Cut -- Java](https://github.com/biometrics/imagingbook/blob/master/src/color/MedianCutQuantizer.java)
+# Dependencies
+- Need to have X installed on your system
+- Have applications that use .Xresources to define colors (xterm, st terminal, i3)
 
 # Quick Run
 - Run ```rusty-theme -i [image_file] -s [desired colorscheme name] ```
