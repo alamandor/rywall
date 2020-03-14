@@ -1,9 +1,9 @@
 # rusty-theme
-A theme maker inspired by other tools to cutomize OS themes on the fly leveraging .Xdefaults system
+A theme maker inspired by other tools to customize OS themes on the fly leveraging .Xdefaults system
 
 ## The plan:
-Customizing my personal linux distro with different window managers and compnents of a desktop environment is what inspired me to get interested in system development. A lot of the time, getting the individual components, like the windows, status bar, and lock screen is simplified by having them retrieve a color pallet from a single source so they all sync up aesthetically. The Xdefaults system does this in the Xorg display system.
-My goal would be to write a rust program that can manage and implement differet color palletes, to create the ability for the user to change color schemes on the fly easily.
+Customizing my personal linux distro with different window managers and components of a desktop environment is what inspired me to get interested in system development. A lot of the time, getting the individual components, like the windows, status bar, and lock screen is simplified by having them retrieve a color pallet from a single source so they all sync up aesthetically. The Xdefaults system does this in the Xorg display system.
+My goal would be to write a rust program that can manage and implement different color pallets, to create the ability for the user to change color schemes on the fly easily.
 ## Features desired
 - Have a single location where different color "config" files are stored where the app can read in the color values and update the appropriate config files depending on the OS tool being updated.
 - Add the ability to generate color palletes randomly, but try and adjust it after so they don't "clash" *Perhaps normalize is a better term not sure*
@@ -80,7 +80,7 @@ This shuffles the keys and color values to get a different possibly better palle
 - [Online color grabber 1](https://superdevresources.com/tools/color-extractor)
 - [Online color grabber 2](https://labs.tineye.com/color/cfe365d6bf120f52b757156b1fea15b3b2299643?ignore_background=True&width=250&color_format=hex&ignore_interior_background=True&height=140)
 - The app displays the generated colorscheme after it is done and has options to retreive the actual colors be used by the Xsystem. So this can be verified by using the tool or running xrdb yourself.
-### Intergrated Tests
+### Integrated Tests
 - There are 3 test that one can run with the ``` cargo test -- --nocapture``` since verifying that colors were loaded is done with println! statements.
 	- I reccomend choosing them by name to run them, 1 at a time, I had strange behavior runnning the function to retrive from the running Xdatabase becasue I believe the tests can run in parallel.
 	- loaded_to_xystem verfies that rusty-theme correctly generates a colorscheme AND loads it into Xsystem by running the xrdb command.
