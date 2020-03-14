@@ -78,10 +78,7 @@ fn main() -> Result<(), Error> {
 
     let matches = cli.get_matches();
     let save_file: &str;
-    let mut random: bool = false;
-    if matches.is_present("random") {
-        random = true;
-    }
+    let random = matches.is_present("random");
 
     if matches.is_present("colorscheme") {
         let file = matches.value_of("colorscheme").unwrap();
@@ -198,14 +195,12 @@ fn list_loaded_colors() {
 
     let fg = current_colors.clone().unwrap().fg.unwrap();
     let bg = current_colors.clone().unwrap().bg.unwrap();
-    println!("Current colorscheme loaded by Xresources database");
+    println!("Current colorscheme loaded by Xresources database\n");
     println!("fg = {:?}", fg);
     println!("bg = {:?}", bg);
 
-    let mut x = 0;
-    for color in current_colors.unwrap().colors.iter() {
+    for (x, color) in current_colors.unwrap().colors.iter().enumerate() {
         println!("color{} = {}", x, color.clone().unwrap());
-        x += 1;
     }
 }
 
@@ -286,12 +281,10 @@ fn colors_from_image(file: &str, o_path: &str, rand: bool) -> Result<(), Error> 
 
     if rand {
         let rand_colors: Vec<String> = shuffle_colors(&all_colors);
-        println!("random!");
         for c in rand_colors {
             writeln!(output, "{}", c)?;
         }
     } else {
-        println!("not random!");
         for c in all_colors.keys() {
             writeln!(output, "{}", c)?;
         }
@@ -318,7 +311,7 @@ fn colors_from_image(file: &str, o_path: &str, rand: bool) -> Result<(), Error> 
     let input = File::open(path)?;
     let buffered = BufReader::new(input);
 
-    println!("This is your new Xresources Colorcheme:");
+    println!("This is your generated colorscheme, saved in {}", o_path);
     for line in buffered.lines() {
         println!("{}", line?);
     }

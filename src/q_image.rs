@@ -135,9 +135,10 @@ impl ColorBucket {
         // iterate through and find the appropriate median to return by using the color count of each channel to increment the pixel number
         let half = self.count / 2;
         let mut pixel_num = 0;
-        for median in self.lower..self.upper {
+        for (median, _i) in colors.iter().enumerate().take(self.upper).skip(self.lower) {
             pixel_num += colors[median].count;
 
+            // Return the index where we found median
             if pixel_num >= half {
                 return median;
             }
