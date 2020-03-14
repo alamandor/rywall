@@ -1,13 +1,12 @@
 #[cfg(test)]
 mod tests {
-use std::path::Path;
-use crate::colors_from_image;
-use std::process::Command;
-use crate::list_loaded_colors;
-use std::env;
+    use crate::colors_from_image;
+    use crate::list_loaded_colors;
+    use std::env;
+    use std::path::Path;
+    use std::process::Command;
     #[test]
     fn loaded_to_xsystem() {
-
         println!("Testing that rusty-theme loads colorscheme and saves it to Xsystem database, verify that colors for generated output and xrdb colors match up\n");
 
         let image_file_name = "res/snow_sunset.jpeg";
@@ -28,15 +27,9 @@ use std::env;
 
         println!("LOADING COLORS IN X DATABASE\n");
         list_loaded_colors();
-
-
-
-
-
     }
     #[test]
     fn random_to_xsystem() {
-
         println!("Testing that rusty-theme loads colorscheme, randomizes the hex values associated with each number, and properly loads it to Xsystem\n");
 
         let image_file_name = "res/snow_sunset.jpeg";
@@ -68,7 +61,5 @@ use std::env;
         let mut path = env::current_dir().unwrap();
         path.push("test_name");
         assert!(path.exists());
-
     }
 }
-

@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::fs::*;
 use std::io::{BufRead, BufReader, Error, Write};
 use std::process::Command;
-mod mcq_image;
+mod q_image;
 mod test;
 
 fn main() -> Result<(), Error> {
@@ -82,7 +82,6 @@ fn main() -> Result<(), Error> {
     if matches.is_present("random") {
         random = true;
     }
-
 
     if matches.is_present("colorscheme") {
         let file = matches.value_of("colorscheme").unwrap();
@@ -205,8 +204,8 @@ fn list_loaded_colors() {
 
     let mut x = 0;
     for color in current_colors.unwrap().colors.iter() {
-        println!("color{} = {}",x, color.clone().unwrap());
-        x+=1;
+        println!("color{} = {}", x, color.clone().unwrap());
+        x += 1;
     }
 }
 
@@ -220,7 +219,7 @@ fn colors_from_image(file: &str, o_path: &str, rand: bool) -> Result<(), Error> 
             .to_rgba();
         let data = img.into_vec();
 
-        mcq_image::MedianCut::from_pixel_vec(data.as_slice(), pallet_size)
+        q_image::MedianCut::from_pixel_vec(data.as_slice(), pallet_size)
     };
 
     let common_colors = q_col.get_quantized_colors();
@@ -288,18 +287,15 @@ fn colors_from_image(file: &str, o_path: &str, rand: bool) -> Result<(), Error> 
     if rand {
         let rand_colors: Vec<String> = shuffle_colors(&all_colors);
         println!("random!");
-        for c in rand_colors{
-            writeln!(output, "{}", c);
+        for c in rand_colors {
+            writeln!(output, "{}", c)?;
         }
-    }
-    else{
+    } else {
         println!("not random!");
-        for c in all_colors.keys(){
-            writeln!(output, "{}", c);
+        for c in all_colors.keys() {
+            writeln!(output, "{}", c)?;
         }
-
     }
-
 
     let bg_color = bg.unwrap().as_str();
     let fg_color = fg.unwrap().as_str();
