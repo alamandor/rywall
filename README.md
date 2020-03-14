@@ -20,6 +20,8 @@
 	- OR
 - Run ```cargo run -- -i image_file.jpg -s aagColorscheme``` Saves a colorscheme generated image_file to the file aagColorscheme.
 
+### Run on existing colorscheme file
+- Run ``` rusty-theme -c [colorscheme file]```
 ### Reload .Xresources on-demand, through ```xrdb```
 - Add ```#include "/path/to/colorscheme_file"``` to your Xresources file and comment out the existing colors if needed.
 	- OR
