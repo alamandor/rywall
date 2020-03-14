@@ -9,6 +9,7 @@ use std::fs::*;
 use std::io::{BufRead, BufReader, Error, Write};
 use std::process::Command;
 mod mcq_image;
+mod test;
 
 fn main() -> Result<(), Error> {
     let cli = App::new("rusty-theme")
@@ -25,6 +26,7 @@ fn main() -> Result<(), Error> {
            -s  --save <name>    Use supplied name for colorscheme file generated\n\
            -r                   Reload the default .Xresources file cannot use with -n\n\
            -n --now             Reload Xresources with generated colorscheme\n\
+           --random             Shuffle the colors in the generated colorscheme before writing to file\n\
            -c --colorscheme     Load the provided colorscheme file made with the tool in xrdb")
         .usage("rusty-theme [-i <image file path>]\n\t-- [-c Immediately load generated colorscheme]\n\t-- [-r Load the user's default .Xresources file in their home directory] (Cannot be used with the -c Option)]\n\t-- [-s <Desired colorscheme name>]")
         .about("Use existing images to calculate a pallet for Xresources")
@@ -57,6 +59,11 @@ fn main() -> Result<(), Error> {
                 .takes_value(true),
         )
         .arg(
+            Arg::with_name("random")
+                .long("random")
+                .help("randomize the colors in color pallet upon generation"),
+        )
+        .arg(
             Arg::with_name("reload")
                 .short("r")
                 .long("reload")
@@ -71,6 +78,11 @@ fn main() -> Result<(), Error> {
 
     let matches = cli.get_matches();
     let save_file: &str;
+    let mut random: bool = false;
+    if matches.is_present("random") {
+        random = true;
+    }
+
 
     if matches.is_present("colorscheme") {
         let file = matches.value_of("colorscheme").unwrap();
@@ -96,10 +108,10 @@ fn main() -> Result<(), Error> {
         if matches.is_present("save") {
             save_file = matches.value_of("save").unwrap();
             println!("{}", save_file);
-            colors_from_image(image_file_name, save_file)?;
+            colors_from_image(image_file_name, save_file, random)?;
         } else {
-            colors_from_image(image_file_name, "")?;
-            save_file = "/colorscheme";
+            colors_from_image(image_file_name, "", random)?;
+            save_file = "colorscheme";
         }
         // Reload colorscheme  file
         if matches.is_present("now") {
@@ -191,12 +203,14 @@ fn list_loaded_colors() {
     println!("fg = {:?}", fg);
     println!("bg = {:?}", bg);
 
+    let mut x = 0;
     for color in current_colors.unwrap().colors.iter() {
-        println!("color = {}", color.clone().unwrap());
+        println!("color{} = {}",x, color.clone().unwrap());
+        x+=1;
     }
 }
 
-fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
+fn colors_from_image(file: &str, o_path: &str, rand: bool) -> Result<(), Error> {
     let pallet_size = 16;
     println!("Reading image {}", file);
 
@@ -238,8 +252,7 @@ fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
         // Find the luminance (brightness) of color. brighter = higher
         let lum = calc_luminance(q.red, q.grn, q.blu);
         let x_color_str = format!("*color{}: #{:X}{:X}{:X}", x, q.red, q.grn, q.blu);
-        // println!("{:?}", x_color_str);
-        writeln!(output, "{}", x_color_str)?;
+        // writeln!(output, "{}", x_color_str)?;
         all_colors.insert(x_color_str, lum);
     }
 
@@ -272,8 +285,21 @@ fn colors_from_image(file: &str, o_path: &str) -> Result<(), Error> {
         }
     });
 
-    let rand_colors: Vec<String> = shuffle_colors(&all_colors);
-    println!("{:?}", rand_colors);
+    if rand {
+        let rand_colors: Vec<String> = shuffle_colors(&all_colors);
+        println!("random!");
+        for c in rand_colors{
+            writeln!(output, "{}", c);
+        }
+    }
+    else{
+        println!("not random!");
+        for c in all_colors.keys(){
+            writeln!(output, "{}", c);
+        }
+
+    }
+
 
     let bg_color = bg.unwrap().as_str();
     let fg_color = fg.unwrap().as_str();
