@@ -52,15 +52,12 @@ This shuffles the keys and color values to get a different possibly better palle
 - The algorithm for the Median Cut is well-documented on the internet, the best documentee ones tended to be in Java.
 - Median Cut works but repeately splitting boxes that contain the colors and the volume of the colors in the image provided. We split the boxes until we get 16, along the way sorting the colors in descending order so we can ensure the split happens at distinct values. The end result is averaged at the end and the pallette is returned in the form of seperate vector of colorChannels, the data strcuture to hold the "pixels".
 
-# Issues/Lessons Learned
+# Issues
 - Usefulness as a colorscheme for your terminal is varied based on the source image. An image with not many contrasting colors will generate a pallete where most of the colors are the same.
 - A big issue was figuring ways to deal with converting the incoming vector of 8-bit integers representing the rgb values. To do the Median Mean Cut Quantization [Median Cut](https://en.wikipedia.org/wiki/Median_cut) I needed to used 32-bit values, so the conversion involved iterating through the 8-bit vector and building them as 32-bit integers, making sure to acknowledge that the resulting array is a quarter of the length.
-- The other major obstactle was getting convertable with bit-wise operations, mainly the bit-wise AND (&). I had to do research on my own to figure out how to use them. However, I found useful ways to utilize them to break apart individual rgb values from a single rgb integer. Many of the resources I used to read up on the algorithm had implementations with bit-wise operations and I could not find a way to do it without using them. But after this project I definitely have a better understanding of them.
-- Formatting strings into a form accepted by the Xresources file took some time as well, but I found that the format! macro was a life-saver for sure.
-- Comparing float values for the luminance values of the generated colors required an outside library ```float-cmp``` since the compiler was giving me trouble for testing for equality among float values.
-# Testing
-- I used st terminal to test whether the colorschemes were properly loaded since I could easily spawn another terminal and see the effect of the new colorscheme.
-- Finding ways to test this in the code was a big problem since the end result is based on a visual product, and the fact that the quantized colors are averages of orginal values passed inside, so I went to online pallete generators and compared by pallete with theres until I got consistent and satisfactory results.
+satisfactory results.
+
+
 - [Online color grabber 1](https://superdevresources.com/tools/color-extractor)
 - [Online color grabber 2](https://labs.tineye.com/color/cfe365d6bf120f52b757156b1fea15b3b2299643?ignore_background=True&width=250&color_format=hex&ignore_interior_background=True&height=140)
 - The app displays the generated colorscheme after it is done and has options to retreive the actual colors be used by the Xsystem. So this can be verified by using the tool or running xrdb yourself.
@@ -71,9 +68,7 @@ This shuffles the keys and color values to get a different possibly better palle
 	- random_to_xsystem tests the same as above but tests whether the hex xolors and the names associated with them are randomly shuffled properly
 	- save_with_correct_name simple creates a colorscheme from an image and verifies it was correctly created with the correct name with an assert statement.
 # Future Plans
-- I tried to use this as an oppurtunity to try and implement code in the proper rust coding methods and idioms. Espcially using match statments and passing errors outside the caller with the ? suffix on function calls. I feel that I have a lot to learn and would like begin crating custom error messages with enums.
-- I think personally alot of the code could be neater and more concise, my focus was more on making something that worked and was semi-useful. With more time I would like to polish it up alot and use more idiomatic rust coding conventions to do it.
 - Use an external crate to display colors within the terminal output to speed up the process of comparing colorschemes.
 - Add ability to create an organized colorcheme directory that we can search in subsequent runs of the program
 - Better handling of errors in current code.
-- Isolate functions in main and consolidate them in a library crate so I could use this project as the base of future projects once it is complete.
+- Isolate functions in main and consolidate them in a library crate
