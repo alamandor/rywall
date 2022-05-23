@@ -1,5 +1,4 @@
-# Project Name
-- rusty-theme
+# Rywall
 # Author
 - Alec Greenaway
 - aag3@pdx.edu
