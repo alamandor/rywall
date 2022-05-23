@@ -57,9 +57,7 @@ This shuffles the keys and color values to get a different possibly better palle
 - A big issue was figuring ways to deal with converting the incoming vector of 8-bit integers representing the rgb values. To do the Median Mean Cut Quantization [Median Cut](https://en.wikipedia.org/wiki/Median_cut) I needed to used 32-bit values, so the conversion involved iterating through the 8-bit vector and building them as 32-bit integers, making sure to acknowledge that the resulting array is a quarter of the length.
 satisfactory results.
 
-
-- [Online color grabber 1](https://superdevresources.com/tools/color-extractor)
-- [Online color grabber 2](https://labs.tineye.com/color/cfe365d6bf120f52b757156b1fea15b3b2299643?ignore_background=True&width=250&color_format=hex&ignore_interior_background=True&height=140)
+# Testing
 - The app displays the generated colorscheme after it is done and has options to retreive the actual colors be used by the Xsystem. So this can be verified by using the tool or running xrdb yourself.
 ### Integrated Tests
 - There are 3 test that one can run with the ``` cargo test -- --nocapture``` since verifying that colors were loaded is done with println! statements.
